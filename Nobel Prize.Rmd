@@ -94,7 +94,7 @@ Top.Bottom<- by_country%>%
 
 Top.Bottom
 
-ggsave("TOp.Bottom.png", Top.Bottom, width = 16, height =10)
+ggsave("Top.Bottom.png", Top.Bottom, width = 16, height =10)
 ```
 
 
