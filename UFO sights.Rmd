@@ -1,0 +1,179 @@
+---
+title: "UFO"
+author: "Ifeoma Egbogah"
+date: "7/17/2019"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r}
+
+library(tidyverse)
+library(sf)
+library(viridis)
+library(cowplot)
+library(fuzzyjoin)
+library(RColorBrewer)
+
+
+
+ufo_sightings <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-06-25/ufo_sightings.csv")
+
+
+district <- read_sf("C:/Users/Egbogah/Desktop/Ifeoma/GB/bd_uk/Data/GB/district_borough_unitary_region.shp")
+
+europe <- read_sf("C:/Users/Egbogah/Desktop/Ifeoma/GB/bd_uk/Data/GB/european_region_region.shp")
+
+district <- district%>%
+  st_transform(4326)
+
+
+pop <- read_csv("C:/Users/Egbogah/Desktop/Ifeoma/pop_uk.csv")
+
+
+```
+
+
+#Bivariate Choropleth Showing UFO Sightings and Population (mid 2017) In The UK
+```{r}
+
+gb1 <- ufo_sightings%>%   #top 5 counties with the most sightings
+  filter(country == "gb")%>%
+  separate(city_area, "county",  sep = " \\(", remove = FALSE, fill = "right")%>%
+  group_by(county, longitude, latitude)%>%
+  summarise(total = n())%>%
+  ungroup()%>%
+  mutate(ratio = 100 * total/sum(total))%>%
+  arrange(desc(ratio))%>%
+  head(5)%>%
+  st_as_sf(crs = 4326, coords = c("longitude", "latitude"))
+
+
+gb2 <- ufo_sightings%>%  #calculating ratio of sightings per county
+  filter(country == "gb")%>%
+  separate(city_area, "county",  sep = " \\(", remove = FALSE, fill = "right")%>%
+  group_by(longitude,latitude)%>%
+  summarise(total = n())%>%
+  ungroup()%>%
+  mutate(ratio = 100 * total/sum(total))%>%
+  st_as_sf(crs = 4326, coords = c("longitude", "latitude"))
+
+ufo_map <- st_join(district, gb2, join = st_intersects) # joining data to the map
+
+
+
+join <- ufo_map%>%  #joining population data to the map
+  fuzzy_left_join(., pop, by = c("NAME" = "Name"), match_fun = str_detect)
+
+
+bivariate_color_scale <- tibble(
+  "3 - 3" = "#804d36",
+  "2 - 3" = "#976b82", #
+  "1 - 3" = "#9972af", # high sightings, high population
+  "3 - 2" = "#af8e53", # low sightings, high population
+  "2 - 2" = "#c8ada0",
+  "1 - 2" = "#cbb8d7", # 
+  "3 - 1" = "#c8b35a", # high sightings, low population
+  "2 - 1" = "#e4d9ac",
+  "1 - 1" = "#e8e8e8"  #  low sightings, low population
+) %>%
+  gather("group", "fill")
+
+
+
+join2 <- join%>%
+  replace_na(list(ratio = 0, `All ages` = 0 ))%>%
+  mutate(ratio_quantiles = cut(ratio,
+                         breaks = unique(quantile(ratio, probs = seq(0, 1, length.out = 6))),
+                         include.lowest = TRUE),
+         
+         pop_quantiles = cut(`All ages`,
+                             breaks = unique(quantile(`All ages`, probs = seq(0, 1, length.out = 4))),
+                         include.lowest = TRUE),
+         
+         group = paste(as.numeric(ratio_quantiles), "-",
+                       as.numeric(pop_quantiles)))%>%
+  left_join(bivariate_color_scale, by = "group")
+
+  
+ 
+map <- ggplot(data = join2)+
+  
+  geom_sf(aes(fill = fill), colour = "grey85",  size = 0.1)+
+  
+  scale_fill_identity()+
+  
+  geom_sf(data = europe, fill = "transparent", colour = "white", size = 0.7)+
+  
+  
+  theme(panel.grid.major = element_line(color = "#dbdbd9", linetype = "dashed", size = 0.2),
+        panel.grid.minor = element_blank(),
+        panel.background = element_rect(fill = "aliceblue"),
+        axis.line = element_blank(),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        plot.margin = unit(c(.5, .5, .2, .5), "cm"),
+        panel.border = element_blank(),
+        panel.spacing = unit(c(-.1, 0.2, .2, 0.2), "cm"),
+        legend.title = element_text(size = 11),
+        
+        legend.text = element_text(size = 9, hjust = 0),
+    
+        plot.title = element_text(size = 12, hjust = 0.5,
+                              color = "#939184"),
+    
+        plot.subtitle = element_text(size = 13, hjust = 0.5,
+                                 color = "grey75",
+                                 margin = margin(b = -0.1,
+                                                 t = -0.1,
+                                                 l = 2,
+                                                 unit = "cm"),
+                                 debug = F),
+    
+    plot.caption = element_text(size = 7,
+                                hjust = .5,
+                                margin = margin(t = 0.2,
+                                                b = 0,
+                                                unit = "cm"),
+                                color = "#939184"))+
+  
+  labs(title ="Bivariate Choropleth Showing UFO Sightings and Population (mid 2017) In The UK",
+       x = " ",
+       y = " ",
+       caption = "Source: NUFORC, OS Open Data, Office Of Natioinal Statistics (ONS) | Visualization: Ifeoma Egbogah")
+
+    
+  bivariate_legend <-  bivariate_color_scale %>%
+  separate(group, into = c("ratio", "pop"), sep = " - ") %>%
+  mutate(ratio = as.integer(ratio),
+         pop = as.integer(pop))
+
+
+
+legend <- ggplot(bivariate_legend)+
+  geom_tile(aes(ratio, pop, fill = fill))+
+  scale_fill_identity() +
+  labs(x = "Sightings ⟶️",
+       y = "Population ⟶️") +
+  theme_minimal()+
+  theme(axis.title = element_text(size = 7)) +
+  coord_fixed(clip = "off")
+ 
+
+bivariate <- ggdraw() +
+  draw_plot(map, 0, 0, 1, 1) +
+  draw_plot(legend, 0.05, 0.075, 0.2, 0.2)
+
+bivariate
+
+ggsave("C:/Users/Egbogah/Desktop/bivariate.png", bivariate, width = 6, height = 6)
+
+```
