@@ -88,7 +88,11 @@ wildlife1 <- wildlife_impacts%>%
        subtitle = "Catergorised by impact on the time of day",
        caption = "Source: FAA | Visualization: Ifeoma Egbogah")
 
+```
 
+
+##GGalluvial Plot
+```{r}
 wildlife2 <- wildlife_impacts%>%
   filter(species != "Unknown bird - medium")%>%
   filter(species != "Unknown bird - small")%>%
@@ -173,11 +177,11 @@ wildlife4 <- wildlife_impacts%>%
        caption = "Source: FAA | Visualization: Ifeoma Egbogah")
 
 
-ggsave("C:/Users/Egbogah/Desktop/wildlife.png", wildlife, width = 8, height = 8)
-ggsave("C:/Users/Egbogah/Desktop/wildlife1.png", wildlife1, width = 8, height = 8)
-ggsave("C:/Users/Egbogah/Desktop/wildlife2.png", wildlife2, width = 8, height = 8)
-ggsave("C:/Users/Egbogah/Desktop/wildlife3.png", wildlife3, width = 8, height = 8)
-ggsave("C:/Users/Egbogah/Desktop/wildlife4.png", wildlife4, width = 8, height = 8)
+ggsave("wildlife.png", wildlife, width = 8, height = 8)
+ggsave("wildlife1.png", wildlife1, width = 8, height = 8)
+ggsave("wildlife2.png", wildlife2, width = 8, height = 8)
+ggsave("wildlife3.png", wildlife3, width = 8, height = 8)
+ggsave("wildlife4.png", wildlife4, width = 8, height = 8)
   
 
 ```
@@ -230,7 +234,7 @@ map <- ggplot()+
        title = "Aircraft Strike On Wildlife in North America from 1990 - 2018",
        caption = "Source: FAA | Visualization: Ifeoma Egbogah")
 
-ggsave("C:/Users/Egbogah/Desktop/wildlife.png", map, width = 8, height = 8)
+ggsave("map.png", map, width = 8, height = 8)
 
 ```
 

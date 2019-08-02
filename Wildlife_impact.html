@@ -551,10 +551,9 @@ wildlife1 &lt;- wildlife_impacts%&gt;%
        fill = &quot;Time of Day&quot;,
        title = &quot; Aircraft Strike On Wildlife In North America From 1990 - 2018&quot;,
        subtitle = &quot;Catergorised by impact on the time of day&quot;,
-       caption = &quot;Source: FAA | Visualization: Ifeoma Egbogah&quot;)
-
-
-wildlife2 &lt;- wildlife_impacts%&gt;%
+       caption = &quot;Source: FAA | Visualization: Ifeoma Egbogah&quot;)</code></pre>
+<p>##GGalluvial Plot</p>
+<pre class="r"><code>wildlife2 &lt;- wildlife_impacts%&gt;%
   filter(species != &quot;Unknown bird - medium&quot;)%&gt;%
   filter(species != &quot;Unknown bird - small&quot;)%&gt;%
   filter(species != &quot;Unknown bird - large&quot;)%&gt;%
@@ -638,11 +637,11 @@ wildlife4 &lt;- wildlife_impacts%&gt;%
        caption = &quot;Source: FAA | Visualization: Ifeoma Egbogah&quot;)
 
 
-ggsave(&quot;C:/Users/Egbogah/Desktop/wildlife.png&quot;, wildlife, width = 8, height = 8)
-ggsave(&quot;C:/Users/Egbogah/Desktop/wildlife1.png&quot;, wildlife1, width = 8, height = 8)
-ggsave(&quot;C:/Users/Egbogah/Desktop/wildlife2.png&quot;, wildlife2, width = 8, height = 8)
-ggsave(&quot;C:/Users/Egbogah/Desktop/wildlife3.png&quot;, wildlife3, width = 8, height = 8)
-ggsave(&quot;C:/Users/Egbogah/Desktop/wildlife4.png&quot;, wildlife4, width = 8, height = 8)</code></pre>
+ggsave(&quot;wildlife.png&quot;, wildlife, width = 8, height = 8)
+ggsave(&quot;wildlife1.png&quot;, wildlife1, width = 8, height = 8)
+ggsave(&quot;wildlife2.png&quot;, wildlife2, width = 8, height = 8)
+ggsave(&quot;wildlife3.png&quot;, wildlife3, width = 8, height = 8)
+ggsave(&quot;wildlife4.png&quot;, wildlife4, width = 8, height = 8)</code></pre>
 <p>##Choropleth Map</p>
 <pre class="r"><code>data(&quot;fips.state&quot;)
 data(&quot;hawaii&quot;)
@@ -688,7 +687,7 @@ map &lt;- ggplot()+
        title = &quot;Aircraft Strike On Wildlife in North America from 1990 - 2018&quot;,
        caption = &quot;Source: FAA | Visualization: Ifeoma Egbogah&quot;)
 
-ggsave(&quot;C:/Users/Egbogah/Desktop/wildlife.png&quot;, map, width = 8, height = 8)</code></pre>
+ggsave(&quot;map.png&quot;, map, width = 8, height = 8)</code></pre>
 
 
 
