@@ -365,7 +365,7 @@ While some older devices still use the likes of IBM processors with similar proc
        caption = "Data Source: Wikipedia | Visualization: Ifeoma Egbogah")
 
 
-ggsave("C:/Users/Egbogah/Desktop/area.png", area_of_chip, height = 7, width = 15)
+ggsave("area.png", area_of_chip, height = 7, width = 15)
 ```
 
 ```
@@ -373,6 +373,6 @@ ggsave("C:/Users/Egbogah/Desktop/area.png", area_of_chip, height = 7, width = 15
 ```
 
 ```r
-ggsave("C:/Users/Egbogah/Desktop/mooore.png", moore_law, height = 5, width = 10)
+ggsave("mooore.png", moore_law, height = 5, width = 10)
 ```
 
