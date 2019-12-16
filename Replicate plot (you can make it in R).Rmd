@@ -64,7 +64,7 @@ ggsave("nyc.jpeg", nyc, width = 20, height = 8)
 ```
 
 
-##Replicating Election Forecast By Fivethirthyeight
+##Replicating Election Forecast By Fivethirtyeight
 ```{r}
 
 library(sf)
