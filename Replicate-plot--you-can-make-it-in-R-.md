@@ -87,7 +87,7 @@ nyc <- nyc_regents%>%
        caption = "Data: DS Labs Package | Visualization: Ifeoma Egbogah")
   
 
-ggsave("C:/Users/Egbogah/Desktop/nyc.jpeg", nyc, width = 20, height = 8)
+ggsave("nyc.jpeg", nyc, width = 20, height = 8)
 ```
 
 ```
@@ -407,6 +407,6 @@ poll_map <-  ggdraw() +
 ```
 
 ```r
-ggsave("C:/Users/Egbogah/Desktop/poll2.jpeg", poll_map, width = 20, height = 8)
+ggsave("poll2.jpeg", poll_map, width = 20, height = 8)
 ```
 

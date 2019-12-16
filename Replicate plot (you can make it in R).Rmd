@@ -59,7 +59,7 @@ nyc <- nyc_regents%>%
        caption = "Data: DS Labs Package | Visualization: Ifeoma Egbogah")
   
 
-ggsave("C:/Users/Egbogah/Desktop/nyc.jpeg", nyc, width = 20, height = 8)
+ggsave("nyc.jpeg", nyc, width = 20, height = 8)
 
 ```
 
@@ -276,7 +276,7 @@ poll_map <-  ggdraw() +
   draw_plot(clinton, 0.81, 0.05, 0.4, 0.5, width = 0.8, height = 0.26)+
   draw_plot(trump, 0.81, 0, 0.4, 0.5, width = 0.8, height = 0.2)
 
-ggsave("C:/Users/Egbogah/Desktop/poll2.jpeg", poll_map, width = 20, height = 8)
+ggsave("poll2.jpeg", poll_map, width = 20, height = 8)
 
 ```
 
