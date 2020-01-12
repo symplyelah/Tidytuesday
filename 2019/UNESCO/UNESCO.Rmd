@@ -1,0 +1,105 @@
+---
+title: "UNESCO"
+author: "Ifeoma Egbogah"
+date: "5/14/2019"
+output: 
+  html_document: 
+    keep_md: yes
+---
+
+##Analysising the global student to teacher ratio dataset from UNESCO
+```{r}
+
+library(tidyverse)
+library(patchwork)
+library(maps)
+library(countrycode)
+
+theme_set(theme_light())
+
+unesco <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-05-07/student_teacher_ratio.csv")
+
+```
+
+##Changing the name of the country Cote d'Ivoire to Ivory Coast
+```{r}
+
+IV <-unesco%>%
+  filter(country == "Côte d'Ivoire")%>%
+  mutate(country = paste0("Ivory Coast"))
+  
+unesco2 <- unesco%>%
+  filter(country != "Côte d'Ivoire")%>%
+  bind_rows(IV)
+```
+
+##Calculating the change in student/teacher ratio for primary education between 2012 and 2015
+```{r}
+
+#Subset data/calculating change in student to teacher ratio
+
+unesco_spread <- unesco2%>%
+  mutate(continent = countrycode(country_code, "iso3c", "continent"))%>%
+  mutate(region = countrycode(country_code, "iso3c", "region"))%>%
+  filter(!is.na(region))%>%
+  filter(!is.na(continent))%>%
+  filter(indicator == c("Primary Education"))%>%
+  mutate(year = paste0("Y", year))%>%
+  spread(year, student_ratio)%>%
+  mutate(current=Y2015,
+         change =Y2015 - Y2012)
+ 
+#Visualization
+
+  plot_region<- function(data) {
+    
+    ggplot(data, aes(x= current, y = change, group= region, colour=continent))+
+    geom_point(show.legend = FALSE)+
+    geom_hline(aes(yintercept=0), show.legend = FALSE)+
+  facet_wrap(~region)+
+    geom_text(aes(label=country), vjust = 1, hjust = 1, check_overlap = TRUE, show.legend = FALSE)+
+    scale_y_continuous(limits = c(-20, 20))+
+    expand_limits(x=0)+
+    labs(x="Student/Teacher ratio", y="Change")
+  
+}
+
+by_region<- unesco_spread%>%
+  group_by(current, change, region, continent)%>%
+  split(.$continent)%>%
+  purrr::map(plot_region)
+
+
+  
+plot_continent<-function(data) {
+  
+  ggplot(data, aes(current, change, ratio, colour=continent))+
+  geom_point(show.legend = FALSE)+
+  geom_hline(aes(yintercept = 0), show.legend = FALSE)+
+  facet_wrap(~continent, ncol=1)+
+  geom_text(aes(label=country), vjust = 1, hjust = 1, check_overlap = TRUE, show.legend = FALSE)+
+    scale_y_continuous(limits = c(-20, 20))+
+    expand_limits(x=0)+
+    labs(x="Student/Teacher ratio", y="Change")
+  
+}
+
+
+by_continent<-unesco_spread%>%
+  group_by(current, change, continent)%>%
+  split(.$continent)%>%
+  purrr:: map(plot_continent)
+
+
+cont <-wrap_plots(by_continent) + plot_annotation(title="Change in Student/Teacher Ratio For Primary Education Between 2012 and 2015", 
+caption = "Data:UNESCO Institute Of Statistic| Graphics: Ifeoma Egbogah")
+
+reg <-wrap_plots(by_region)+ plot_annotation(title="Change in Student/Teacher Ratio For Primary Education Between 2012 and 2015", 
+caption = "Data:UNESCO Institute Of Statistic| Graphics: Ifeoma Egbogah")
+
+
+ggsave("unesco.png", cont, width = 16, height =10)
+ggsave("unesco2.png", reg, width = 16, height =10)
+
+```
+
