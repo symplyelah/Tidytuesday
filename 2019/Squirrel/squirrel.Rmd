@@ -1,0 +1,79 @@
+---
+title: "NYC Squirrel Census"
+author: "Ifeoma Egbogah"
+date: "11/7/2019"
+output: 
+  html_document: 
+    keep_md: yes
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+
+library(tidyverse)
+library(ggmap)
+library(viridis)
+library(extrafont)
+font_import()
+loadfonts(device = "win")
+
+nyc_squirrels <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-10-29/nyc_squirrels.csv")
+
+ny.map2 <- get_map("Central Park, New York", maptype = "terrain", zoom = 14) #Get map of central park from google
+
+```
+
+```{r}
+
+nyc <- ggmap(ny.map2)+
+  stat_density_2d(data = nyc_squirrels%>%
+                  filter(!is.na(highlight_fur_color)), 
+                  aes(long, lat, fill = stat(level)), 
+                  alpha = 0.1, bins = 20, geom = "polygon")+
+  scale_fill_viridis(option = "C")+
+  facet_wrap(~ `highlight_fur_color`)+
+  theme_minimal()+
+  theme(axis.text = element_blank(),
+        strip.text.x = element_text(size = 13))+
+  labs(x = " ",
+       y = " ",
+       title = "Geographic Density of Squirrels in Central Park, New York",
+       subtitle = "The geographic density is faceted based on the highlight colour of the squirrels' fur",
+       caption = "Data: NYC Squirrel Census | Visualization: Ifeoma Egbogah",
+       fill = "Level")
+
+
+nyc2 <- ggmap(ny.map2)+
+  stat_density_2d(data = nyc_squirrels%>%
+                  filter(!is.na(primary_fur_color)), 
+                  aes(long, lat, fill = stat(level)), 
+                  alpha = 0.1, bins = 20, geom = "polygon")+
+  scale_fill_viridis(option = "C")+
+  facet_wrap(~ `primary_fur_color`)+
+  theme_minimal()+
+  theme(axis.text = element_blank(),
+        strip.text.x = element_text(size = 13))+
+  labs(x = " ",
+       y = " ",
+       title = "Geographic Density of Squirrels in Central Park, New York",
+       subtitle = "The geographic density is faceted based on the squirrels' primary fur colour",
+       caption = "Data: NYC Squirrel Census | Visualization: Ifeoma Egbogah",
+       fill = "Level")
+
+
+```
+
+
+```{r}
+
+ggsave("map.jpeg", nyc,  width = 12, height = 12)
+ggsave("map2.jpeg", nyc,  width = 12, height = 10)
+
+```
+
