@@ -1,0 +1,145 @@
+---
+title: "NobelPrizeWinners"
+author: "Ifeoma Egbogah"
+date: "5/23/2019"
+output: 
+  html_document: 
+    keep_md: yes
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tmap)
+library(tmaptools)
+library(tidyverse)
+
+theme_set(theme_light())
+
+nobel_winners <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-05-14/nobel_winners.csv")
+
+#Remove duplicates of Nobel Winners
+nobel_winners <- nobel_winners%>%
+  arrange(full_name, prize_year, category, motivation)%>%
+  distinct(full_name, prize_year, category, motivation, .keep_all = TRUE)
+
+```
+
+#Laureates who have won the Nobel Prize More Than Once. ICRC have won it thrice.
+(Marie Curie won her Nobel Prizes in the Physics and Chemistry Categories)
+```{r}
+
+#Laureates who have won more than once.
+multiple<-nobel_winners%>%
+  separate(prize_share, c("number", "share"))%>%
+ count(full_name, laureate_id, sort=TRUE)%>%
+  head(6)%>%
+  mutate(full_name = fct_reorder(full_name, n))%>%
+  ggplot(aes(full_name, n))+
+  geom_col(fill= "hotpink2")+
+  coord_flip()+
+  labs(title= "Laureates who have won the Nobel Prize More Than Once",
+       subtitle = "Marie Curie won her Nobel Prizes in the Physics and Chemistry Categories", x="Name of Laureates", y="Number of Nobel Prizes", caption = "Source: Kaggle / Visualization: Ifeoma Egbogah")
+
+multiple
+
+ggsave("multiple.png", multiple, width = 16, height =10)
+```
+
+#Age Distribution of Laureates By Category
+```{r}
+
+#Age at the time of Award
+Age <- nobel_winners%>%
+  mutate(age = prize_year - lubridate::year(birth_date))%>%
+  filter(!is.na(age))%>%
+  ggplot(aes(category, age, fill=gender))+
+  geom_boxplot()+
+  scale_fill_manual(values = c("hotpink","skyblue"))+
+  labs(x = "Category", y= "Age of Laureates", title = "Age Distribution of Noble Prize Winners By Category and Gender", subtitle = "Malala Yousafzai (at 17yrs) is the youngest laureate (Peace) and Leonid Hurwicz (at 90yrs) is the oldest laureate (Economics)", caption = "Source: Kaggle / Visualization: Ifeoma Egbogah", fill="Gender")
+
+Age
+
+ggsave("Age.png", Age, width = 16, height =10)
+
+```
+
+
+```{r}
+#Separating the birth country column because old countries names were merged with new countries names
+
+by_country<- nobel_winners%>%
+  filter(!is.na(birth_country))%>%
+  separate(birth_country, c("old_name", "country"), sep= "\\(", extra = "merge", fill = "right")%>%
+  separate(country, c("country", NA), sep="[)]")%>%
+  mutate(country = coalesce(country, old_name))
+
+#Top and Bottom countries With Nobel Prize Wins
+Top.Bottom<- by_country%>%
+  filter(!is.na(country))%>%
+  count(country, sort=TRUE)%>%
+  arrange(desc(n))%>%
+  slice(c(1:15, seq(n()- 15, n())))%>%
+   mutate(country = fct_reorder(country, n))%>%
+  ggplot(aes(country, n))+
+  geom_point(colour="hotpink4")+
+  coord_flip()+
+  labs(title = "Top 15 Countries with the Most Nobel Prize Wins",
+       subtitle = "Bottom 15 Countries with the least Nobel Prize Wins",
+       x= "Number of Nobel Prize wins", y="Country", caption = "Source: Kaggle / Visualization: Ifeoma Egbogah")
+
+Top.Bottom
+
+ggsave("Top.Bottom.png", Top.Bottom, width = 16, height =10)
+```
+
+
+#Mapping the Nobel Prize Winners Based on their Country of Birth
+```{r}
+#Changing the names of some countries and getting the iso3 codes for each country to enable merging with the map data (World)
+
+map <- by_country%>%
+  mutate(country =str_replace(country, "Scotland", "United Kingdom" ))%>%
+  mutate(country =str_replace(country, "Northern Ireland", "United Kingdom"))%>%
+  mutate(iso3 = countrycode::countrycode(country, "country.name", "iso3c"))%>%
+  mutate(country1 = countrycode::countrycode(iso3, "iso3c", "country.name"))
+
+
+map2 <- map%>%
+  group_by(iso3)%>%
+  filter(!is.na(iso3))%>%
+  summarise(Total = n())%>%
+  arrange(desc(Total))
+
+
+data("World")
+data("land", "rivers")
+
+
+map3 <- append_data(World, map2, key.data ="iso3", key.shp = "iso_a3", ignore.na = TRUE, ignore.duplicates = TRUE)
+
+
+winners<-tm_shape(land)+
+  tm_raster("elevation", legend.show = FALSE)+
+  tm_shape(rivers)+
+   tm_lines("lightblue", lwd = "strokelwd", scale = 1.5, legend.lwd.show = FALSE)+
+   tm_shape(World, is.master = TRUE)+
+   tm_borders("grey20", lwd = .5)+
+  tm_grid(projection = "longlat", labels.size = 0.4, lwd = 0.25)+
+  tm_shape(map3)+
+  tm_dots("Total", col="Total", palette="Spectral", n=10, scale = 1.4, legend.show = FALSE)+
+  tm_style("beaver", bg.color = "lightblue", space.color = "gray90")+
+  tm_layout(main.title= "Number of Nobel Prize Winners By Country", earth.boundary = TRUE, inner.margins = c(0.04, 0.04, 0.03, 0.02), title.size = 1.1, main.title.position = c("center") ,  frame = FALSE, legend.position = c("left", "bottom"))+
+   tm_compass( type = "rose", position = c(0.08, 0.45), size = 3, show.labels =1)+
+  tm_credits("Source: Kaggle / Visualization: Ifeoma Egbogah")
+
+winners
+
+tmap_save(winners, "winners.png")
+
+```
+
