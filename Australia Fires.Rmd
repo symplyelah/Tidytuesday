@@ -79,6 +79,7 @@ rain <- rainfall2%>%
  #geom_mark_circle(aes(fill = rain_sum, filter = month == "Mar"))+
   facet_wrap(~label)+
   scale_y_continuous(limits = c(0, 160), labels = label_number_si(unit = "mm"))+
+  scale_x_discrete(labels = c("J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"))+
   theme_ft_rc()+
   theme(panel.grid.minor = element_blank(),
         axis.title.y = element_text(family = "Gabriola", face = "bold", colour = "white", hjust = 0.5, vjust = 0.9, size = 15),
@@ -118,6 +119,7 @@ temp <- temperature%>%
   geom_line(size = 1, colour = "gold")+
   facet_wrap(~label)+
   scale_y_continuous(labels = label_number_si(unit = "°C"), breaks = seq(0, 30, 10), limits = c(0, 30))+
+  scale_x_discrete(labels = c("J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"))+
   theme_ft_rc()+
   theme(panel.grid.minor = element_blank(),
         axis.title.y = element_text(family = "Gabriola", face = "bold", colour = "white", hjust = 0.5, vjust = 0.9, size = 15),
@@ -130,8 +132,8 @@ temp <- temperature%>%
        title = "Mean Annual Temperature in Australia Faceted By Thirty Year Interval Period from 1910 - 2019",
        caption = "Source: Australian Bureau Of Meterology | Visualization: @negbogah")
 
-#ggsave("rain.jpeg", rain, width = 12, height = 7)
-#ggsave("temp.jpeg", temp, width = 12, height = 7)
+#ggsave("rain.jpeg", rain, width = 16, height = 7)
+#ggsave("temp.jpeg", temp, width = 16, height = 7)
 
 ```
 
