@@ -1,0 +1,74 @@
+---
+title: "Spotify"
+author: "Ifeoma Egbogah"
+date: "2/11/2020"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+
+library(tidyverse)
+library(lubridate)
+library(ggthemes)
+library(hrbrthemes)
+library(extrafont)
+loadfonts(device = "win")
+
+```
+
+
+```{r}
+
+spotify_songs <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-01-21/spotify_songs.csv')
+
+```
+
+##Spot Matrix
+```{r}
+
+spotify <- spotify_songs%>%
+  distinct(track_id, .keep_all = TRUE)%>%
+  separate(track_album_release_date, c("year", "month", "day"), sep = "-", remove = FALSE, convert = TRUE)%>%
+  mutate(month_abbr = month(month, label = TRUE, abbr = TRUE))%>%
+  mutate(mins = duration_ms * 0.000016667)
+
+
+spotify_plot <- spotify%>%
+  filter(year %in% c(2017, 2018, 2019),
+         !is.na(month))%>%
+  mutate(playlist_genre = str_to_title(playlist_genre))%>%
+  group_by(playlist_genre, month_abbr)%>%
+  summarise(mean_pop = mean(track_popularity))%>%
+  ggplot(aes(playlist_genre, month_abbr))+
+  geom_point(colour = "gray20", size = 9)+
+  geom_point(colour  = "#A3BD6A", aes(size = mean_pop))+
+  scale_x_discrete(labels = c("Electronic\nDance\nMusic", "Latin", "Pop", "R&B", "Rap", "Rock"))+
+  theme_hc()+
+  labs(y = " ",
+       x = "Music Genre",
+       size = "Track Popularity",
+       title = "Spot Matrix 0f Mean Popularity of Music Track by Genre\n(2017 - 2019)",
+       caption = "Source: Spotify | Visaualization : @negbogah")+
+  theme(axis.ticks.x = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.title = element_text(size = 6, family = "Perpetua Titling MT", face = "bold"),
+        axis.text.x = element_text(size = 6, hjust = 0.5, colour = "gray20", family = "Poor Richard"),
+        axis.text.y = element_text(size = 6, colour = "gray20", family = "Poor Richard"),
+        axis.line = element_blank(),
+        plot.title = element_text(family = "Ravie", hjust = 0.5, size = 8, colour = "gray20"),
+        plot.margin = unit(c(10, 10, 10, 10), "mm"),
+        plot.caption = element_text(hjust = 1, size = 5, colour = "gray20", family = "Poor Richard"),
+        legend.title = element_text(size = 6, family = "Perpetua Titling MT", face = "bold"),
+        legend.text = element_text(size = 5),
+        legend.position = "bottom")
+
+#ggsave("~/spotify3.jpeg", spotify_plot, width = 5, height = 5)
+```
+
