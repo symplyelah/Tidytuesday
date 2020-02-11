@@ -43,6 +43,10 @@ url_logo <- getURL("https://raw.githubusercontent.com/statsbylopez/BlogPosts/mas
 
 logo <- read.csv(text = url_logo)
 
+missing_logo <- tibble(team2 = c("St. Louis Rams", "San Diego Chargers"),
+                    url = as.factor( c("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ1SdDuQie_F5MeJQf-0dtgxsUGevBX-Qi-QzZaMt-CsqM7MJLm&s",
+                            "https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcQRF4fYdQQTKUM1pnt4LWFOj7F70CTFEmTsyVS3OKIO74i4D42b")))
+
 attendance <- attendance%>%
   unite("team2", team:team_name, sep = " ", remove = FALSE)
 
@@ -73,7 +77,18 @@ attendance2 <- attendance%>%
 attendance2 <- attendance2%>%
   left_join(logo, by = c("team2" = "team"))
 
-attend_rank <- attendance2%>%
+
+attendance3 <- attendance2%>% #filter teams with missing logo and join to missing_logo data
+  filter(team2 == c("St. Louis Rams", "San Diego Chargers"))%>%
+  select(-url)%>%
+  left_join(missing_logo, by = ("team2" = "team2"))
+
+attendance4 <- attendance2%>% #filter teams with logo
+  filter(team2 != c("St. Louis Rams", "San Diego Chargers"))
+  
+attendance5 <- bind_rows(attendance3, attendance4) #bind the two datasets
+
+attend_rank <- attendance5%>%
   mutate(team2 = fct_reorder(str_to_title(team2), rank_order))%>%
   ggplot(aes(x = team2))+
     geom_col(aes(y = total_home), fill = "darkred", colour = "white")+
@@ -91,7 +106,7 @@ attend_rank <- attendance2%>%
             size = 3)+
     geom_text(aes(y = -30, x = 30), hjust = 0.5, vjust = 0, label = "HOME&", size = 7, colour = "darkred", family = "Tempus Sans ITC")+
     geom_text(aes(y = -25, x = 20), hjust = 0.4, vjust = 0, label = "AWAY", size = 7, colour = "grey45", family = "Tempus Sans ITC")+
-  geom_image(aes(y = if_else(total_home >= 13, 23.5, 12), x = team2, image = url), size = 0.055, data = attendance2)+
+  geom_image(aes(y = if_else(total_home >= 13, 23.5, 12), x = team2, image = url), size = 0.055, data = attendance5)+
     scale_y_continuous(limits = c(-30, 30), expand = c(0, 0))+
     scale_colour_identity()+
     coord_polar()+
@@ -179,9 +194,17 @@ standings2 <- standings2%>%
          total_loss_neg = -total_loss)%>%
          left_join(logo, by = c("team2" = "team"))
 
+standings3 <- standings2%>% #filter teams with missing logo and join to missing_logo data
+  filter(team2 == c("St. Louis Rams", "San Diego Chargers"))%>%
+  select(-url)%>%
+  left_join(missing_logo, by = ("team2" = "team2"))
 
+standings4 <- standings2%>% #filter teams with logo
+  filter(team2 != c("St. Louis Rams", "San Diego Chargers"))
+  
+standings5 <- bind_rows(standings3, standings4) #bind the two datasets
 
-bayes_rank <- standings2%>%
+bayes_rank <- standings5%>%
   mutate(team2 = fct_reorder(team2, eb_estimate, .desc = TRUE))%>%
   ggplot(aes(team2))+
   geom_col(aes(y = total_wins), fill = "steelblue")+
@@ -198,14 +221,13 @@ bayes_rank <- standings2%>%
             size = 3,
             fontface = "bold",
             show.legend = FALSE)+
-  geom_image(aes(y = if_else(total_wins >= 182, 258, 205), x = team2, image = url), size = 0.055, data = standings2)+
+  geom_image(aes(y = if_else(total_wins >= 182, 258, 205), x = team2, image = url), size = 0.055, data = standings5)+
   geom_text(aes(y = -250, x = 28), hjust = 0.25, vjust = 0, label = "WINS&", size = 7, colour = "steelblue", family = "Tempus Sans ITC")+
     geom_text(aes(y = -200, x = 22), hjust = 0.07, vjust = 0, label = "LOSSES", size = 7, colour = "grey45", family = "Tempus Sans ITC")+
   scale_y_continuous(limits = c(-270, 320))+
   scale_colour_identity()+
   coord_polar()+
   labs(title = "Empirical Bayes Ranking of Teams in the NFL",
-       subtitle = "No logo for San Diego Chargers (wins = 136, losses = 136, empiral bayes = 0.5) and St.Louis Rams (wins = 107, losses = 148, empirical bayes = 0.42)",
        caption = "Source: Pro Football Reference | Visualization: @negbogah")+
   theme_nothing()+
   theme(axis.text.x = element_blank(),
@@ -262,7 +284,7 @@ plot2 <- ggdraw() +
 
 nfl_plot <- plot_grid(plot1, plot2, ncol = 2)
 
-#ggsave("~NFL/nfl_plot.png", nfl_plot, width = 24, height = 16)
+#ggsave("~nfl_plot.jpeg", nfl_plot, width = 24, height = 16)
 
 ```
 
