@@ -104,25 +104,25 @@ gdpr_map <- violation_join%>%
   geom_curve(data = eu_bind%>%
           filter(name == "France"), aes(x = X, y = Y, xend = X - 1000000, yend = Y + 500000), curvature = -0.2, size = 0.5)+
   geom_label(data = eu_bind%>%
-              filter(name == "France"), aes(x = X - 1400000, y = Y + 600000), label = "Google Inc. France\nhad the most GDPR fines of €50 million", size = 3, colour = "White", fontface = "bold", family = "Comic Sans ITC")+
+              filter(name == "France"), aes(x = X - 1700000, y = Y + 600000), label = "Google Inc. France\nhad the most GDPR fines of €50 million", colour = "White", fontface = "bold", family = "Comic Sans ITC")+
   geom_curve(data = eu_bind%>%
           filter(name == "Austria"), aes(x = X, y = Y, xend = X + 1400000, yend = Y + 100000), curvature = 0.7, size = 0.5)+
   geom_label(data = eu_bind%>%
-               filter(name == "Austria"), aes(x = X + 1500000, y = Y + 220000), label = "Austrian Post had the second\nmost GDPR fines of €18 million", size = 3, colour = "white", fontface = "bold", family = "Comic Sans ITC")+
+               filter(name == "Austria"), aes(x = X + 1500000, y = Y + 220000), label = "Austrian Post had\nGDPR fines of €18 million", colour = "white", fontface = "bold", family = "Comic Sans ITC")+
     geom_curve(data = eu_bind%>%
                filter(name == "Spain"), aes(x = X, y = Y, xend = X - 1400000, yend = Y + 100000))+
   geom_label(data = eu_bind%>%
-               filter(name == "Spain"), aes(x = X - 1600000, y = Y + 100000), label = "Spain had the most violators (33)\nwith GDPR totaling €11.5 million", size = 3, colour = "white", fontface = "bold", family = "Comic Sans ITC")+
-    geom_sf_label(aes(label = name), colour = "white", size = 4, family = "Chiller", fontface = "bold")+
+               filter(name == "Spain"), aes(x = X - 1600000, y = Y + 100000), label = "Spain had the most violators (33)\nwith GDPR totaling €11.5 million", colour = "white", fontface = "bold", family = "Comic Sans ITC")+
+    geom_sf_label(aes(label = name), colour = "white", family = "Chiller", fontface = "bold")+
   scale_fill_got(option = "margaery", label = comma_format(), direction = 1)+
   theme_fivethirtyeight()+
   theme(axis.text.x = element_blank(),
         axis.text.y = element_blank(),
         axis.title.x = element_blank(),
         axis.title.y = element_blank(),
-        plot.title = element_text(hjust = 0.5, family = "Tempus Sans ITC", size = 20),
-        plot.subtitle = element_text(family = "Bradley Hand ITC", face = "bold"),
-        plot.caption = element_text(family = "Bradley Hand ITC", face = "bold"),
+        plot.title = element_text(hjust = 0.5, family = "Tempus Sans ITC", size = 35),
+        plot.subtitle = element_text(family = "Bradley Hand ITC", face = "bold", size = 20),
+        plot.caption = element_text(family = "Bradley Hand ITC", face = "bold", size = 15),
         legend.title = element_text(family = "Tempus Sans ITC", face = "bold"),
         legend.position = "right",
         legend.direction = "vertical")+
@@ -132,7 +132,7 @@ gdpr_map <- violation_join%>%
        fill = "Price (€)")
 
 
-ggsave("~GDPR_Violations/gdpr_map.jpg", gdpr_map, width = 14, height = 10)
+ggsave("~gdpr_map.jpg", gdpr_map, width = 14, height = 10)
 
 ```
 
