@@ -1,0 +1,138 @@
+---
+title: "GDPR Violations"
+author: "Ifeoma Egbogah"
+date: "4/30/2020"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##Packages
+```{r}
+
+library(tidyverse)
+library(lubridate)
+library(sf)
+library(rnaturalearth)
+library(rnaturalearthdata)
+library(scales)
+library(ggthemes)
+library(extrafont)
+loadfonts(device = "win")
+theme_set(theme_light())
+
+```
+
+
+##Data
+```{r}
+gdpr_violations <- readr::read_tsv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-04-21/gdpr_violations.tsv')
+
+gdpr_text <- readr::read_tsv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-04-21/gdpr_text.tsv')
+```
+
+
+##Getting the map
+```{r}
+violation <- gdpr_violations%>%
+  mutate(date = mdy(date))
+
+violation <- violation%>%
+  mutate(controller = str_replace(controller, "Vodafone Espana", "Vodafone España"),
+         controller = str_replace(controller, "Vodafone España, S.A.U.","Vodafone España"),
+         year = year(date))
+
+country <- violation%>%
+  distinct(name)%>%
+  pull()
+
+eu <- ne_countries(scale = "medium", type = "countries", country = country, returnclass = "sf")
+
+box = c(xmin = -30, xmax = 80, ymin = 30, ymax = 90)
+crop_eu <- st_crop(eu, st_bbox(box))
+
+eu1 <- st_transform(crop_eu, crs = "+proj=eck4 +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs")
+
+violation_join <- eu1%>%
+  left_join(violation, by = c("name_long" = "name"))
+
+```
+
+
+##Getting the centroid for each country to use in labelling
+```{r}
+
+eu_centroid <- violation_join%>%
+  select(name, price, abbrev, adm0_a3, year)%>%
+  filter(year == 2019)%>%
+  filter(price > 0)%>%
+  group_by(name, abbrev, adm0_a3)%>%
+  summarise(price = sum(price))%>%
+  st_centroid()%>%
+  st_coordinates()%>%
+  as.data.frame()
+
+
+eu_bind <- violation_join%>%
+  select(name, price, abbrev, adm0_a3, year)%>%
+  filter(year == 2019)%>%
+  filter(price > 0)%>%
+  group_by(name, abbrev, adm0_a3)%>%
+  summarise(price = sum(price))%>%
+  select(name, price)%>%
+  bind_cols(eu_centroid)%>%
+  as.data.frame()
+
+```
+
+
+##Visualization
+```{r}
+
+gdpr_map <- violation_join%>%
+  select(name, price, abbrev, adm0_a3, year)%>%
+  filter(year == 2019)%>%
+  filter(price > 0)%>%
+  group_by(name, abbrev, adm0_a3)%>%
+  summarise(price = sum(price))%>%
+  ggplot(aes(fill = price))+
+  geom_sf()+
+  geom_curve(data = eu_bind%>%
+          filter(name == "France"), aes(x = X, y = Y, xend = X - 1000000, yend = Y + 500000), curvature = -0.2, size = 0.5)+
+  geom_label(data = eu_bind%>%
+              filter(name == "France"), aes(x = X - 1400000, y = Y + 600000), label = "Google Inc. France\nhad the most GDPR fines of €50 million", size = 3, colour = "White", fontface = "bold", family = "Comic Sans ITC")+
+  geom_curve(data = eu_bind%>%
+          filter(name == "Austria"), aes(x = X, y = Y, xend = X + 1400000, yend = Y + 100000), curvature = 0.7, size = 0.5)+
+  geom_label(data = eu_bind%>%
+               filter(name == "Austria"), aes(x = X + 1500000, y = Y + 220000), label = "Austrian Post had the second\nmost GDPR fines of €18 million", size = 3, colour = "white", fontface = "bold", family = "Comic Sans ITC")+
+    geom_curve(data = eu_bind%>%
+               filter(name == "Spain"), aes(x = X, y = Y, xend = X - 1400000, yend = Y + 100000))+
+  geom_label(data = eu_bind%>%
+               filter(name == "Spain"), aes(x = X - 1600000, y = Y + 100000), label = "Spain had the most violators (33)\nwith GDPR totaling €11.5 million", size = 3, colour = "white", fontface = "bold", family = "Comic Sans ITC")+
+    geom_sf_label(aes(label = name), colour = "white", size = 4, family = "Chiller", fontface = "bold")+
+  scale_fill_got(option = "margaery", label = comma_format(), direction = 1)+
+  theme_fivethirtyeight()+
+  theme(axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        plot.title = element_text(hjust = 0.5, family = "Tempus Sans ITC", size = 20),
+        plot.subtitle = element_text(family = "Bradley Hand ITC", face = "bold"),
+        plot.caption = element_text(family = "Bradley Hand ITC", face = "bold"),
+        legend.title = element_text(family = "Tempus Sans ITC", face = "bold"),
+        legend.position = "right",
+        legend.direction = "vertical")+
+  labs(title = "2019 GDPR Fines",
+       subtitle = "Total GDPR fines for 2019 was €104.6 million",
+       caption = "Source: Privacy Affairs | Visualization: @negbogah",
+       fill = "Price (€)")
+
+
+ggsave("~GDPR_Violations/gdpr_map.jpg", gdpr_map, width = 14, height = 10)
+
+```
+
