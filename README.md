@@ -44,7 +44,7 @@ This is my repository for #tidytuesday entries where I will analyse and create d
 
 ### [2019/1](https://github.com/symplyelah/Tidytuesday/blob/master/2019/Wildlife)
 
-!./2019/Wildlife/wildlife4.png](https://github.com/symplyelah/Tidytuesday/blob/master/2019/Wildlife/wildlife4.png)
+![./2019/Wildlife/wildlife4.png](https://github.com/symplyelah/Tidytuesday/blob/master/2019/Wildlife/wildlife4.png)
 
 ***
 
