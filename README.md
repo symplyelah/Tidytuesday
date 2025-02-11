@@ -22,16 +22,16 @@ This is my repository for #tidytuesday entries where I will be analysing and cre
 
 <!-- toc -->
 * **Challenges 2019**
- - 2019/1 [🐦 Wild life Impact](https://github.com/symplyelah/Tidytuesday/blob/master/2019/Wildlife/wildlife4.png)
- - 2019/12 [📊 Philadelphia Parking Violations](https://github.com/symplyelah/Tidytuesday/tree/master/2019/Philadelphia//ticket2.jpeg)
- - 2019/36 [🖥️ Moore's Law](https://github.com/symplyelah/Tidytuesday/blob/master/2019/Transistor/area.png️)
- - 2019/50 [🖥️ You Can Make It in R](https://github.com/symplyelah/Tidytuesday/blob/master/2019/Replicare%20Plot/nyc.jpeg)
+ - 2019/1 [🐦 Wild life Impact](https://github.com/symplyelah/Tidytuesday/blob/master/2019/Wildlife)
+ - 2019/12 [📊 Philadelphia Parking Violations](https://github.com/symplyelah/Tidytuesday/tree/master/2019/Philadelphia)
+ - 2019/36 [🖥️ Moore's Law](https://github.com/symplyelah/Tidytuesday/blob/master/2019/Transistor)
+ - 2019/50 [🖥️ You Can Make It in R](https://github.com/symplyelah/Tidytuesday/blob/master/2019/Replicare%20Plot)
    
 * **Challenges 2020**
-  - 2020/03 [🔑 Passwords](https://github.com/symplyelah/Tidytuesday/blob/master/2020/Passwords/password_plot.png)
-  - 2020/04 [🎶 Spotify Songs: The Golden Age of Hip Hop](https://github.com/symplyelah/Tidytuesday/blob/master/2020/Spotify/spotify_plot.jpeg)
-  - 2020/06 [🎶 NFL](https://github.com/symplyelah/Tidytuesday/blob/master/2020/NFL/nfl_plot.jpeg)
-  - 2020/12 [🐦 College Tuition, Diversity and Pay](https://github.com/symplyelah/Tidytuesday/blob/master/2020/College_Tuition_Diversity_and_Pay/div_map.jpeg)
-  - 2020/12 [🐦 GDPR Violations](https://github.com/symplyelah/Tidytuesday/blob/master/2020/GDPR_Violations/gdpr_map.jpg)
+  - 2020/03 [🔑 Passwords](https://github.com/symplyelah/Tidytuesday/blob/master/2020/Passwords)
+  - 2020/04 [🎶 Spotify Songs: The Golden Age of Hip Hop](https://github.com/symplyelah/Tidytuesday/blob/master/2020/Spotify)
+  - 2020/06 [🎶 NFL](https://github.com/symplyelah/Tidytuesday/blob/master/2020/NFL)
+  - 2020/12 [🐦 College Tuition, Diversity and Pay](https://github.com/symplyelah/Tidytuesday/blob/master/2020/College_Tuition_Diversity_and_Pay)
+  - 2020/12 [🐦 GDPR Violations](https://github.com/symplyelah/Tidytuesday/blob/master/2020/GDPR_Violations)
 
 * **Challenges 2025**  
