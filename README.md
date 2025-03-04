@@ -95,3 +95,9 @@ This is my repository for #tidytuesday entries where I will analyse and create d
 ![./2020/GDPR_Violations/gdpr_map.jpg](https://github.com/symplyelah/Tidytuesday/blob/master/2020/GDPR_Violations/gdpr_map.jpg)
 
 ***
+
+### [2025/05](https://github.com/symplyelah/Tidytuesday/blob/master/2025/Donuts%2C%20Data%2C%20and%20D'oh%20-%20A%20Deep%20Dive%20into%20The%20Simpsons) ⚱️  Simpsons Dataset [Kaggle](https://www.kaggle.com/datasets/prashant111/the-simpsons-dataset)
+
+![./2025/Donuts%2C%20Data%2C%20and%20D'oh%20-%20A%20Deep%20Dive%20into%20The%20Simpsons/simpson.png](https://github.com/symplyelah/Tidytuesday/blob/master/2025/Donuts%2C%20Data%2C%20and%20D'oh%20-%20A%20Deep%20Dive%20into%20The%20Simpsons/simpson.png)
+
+***
