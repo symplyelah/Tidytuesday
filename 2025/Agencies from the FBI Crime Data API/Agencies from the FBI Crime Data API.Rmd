@@ -20,7 +20,7 @@ library(ggtext)
 library(pdftools)
 library(urbnmapr)
 library(extrafont)
-font_import()
+#font_import()
 loadfonts()
 
 agencies <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2025/2025-02-18/agencies.csv')
