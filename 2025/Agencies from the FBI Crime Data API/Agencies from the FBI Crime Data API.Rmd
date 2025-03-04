@@ -1,0 +1,143 @@
+---
+title: "Agencies from the FBI Crime Data API"
+author: "Ifeoma Egbogah"
+output: html_document
+date: "2025-02-24"
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+
+library(tidyverse)
+library(sf)           
+library(ggtext)     
+library(pdftools)
+library(urbnmapr)
+library(extrafont)
+font_import()
+loadfonts()
+
+agencies <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2025/2025-02-18/agencies.csv')
+
+
+states_sf <- get_urbn_map("states", sf = TRUE)
+
+
+pal2 <- c("black", "#511841", "#7983d8", "#ed5e64", "#851e2f")
+
+
+#pal <- c("#bb3e03","#ee9b00","#e9d8a6","#94d2bd","#0a9396")
+
+# Set color background
+bck <- "grey18"
+
+# Set theme
+theme_custom <- theme_void()+
+theme(plot.title = element_text(colour = "white", face = "bold", hjust = 0.5, family = "Papyrus", size = 27),
+      plot.caption = element_text(colour = "grey72", face = "italic"),
+      plot.margin = margin(1,5,10,5,"pt"),
+      plot.background = element_rect(fill = bck, colour=NA),
+      legend.position = "bottom",
+      legend.title = element_text(hjust=0.5,color="white",face="bold", family = "Papyrus"),
+      legend.text = element_text(colour="white")
+)
+
+
+
+```
+
+
+```{r}
+
+#Data cleaning
+agn<- agencies %>%
+  separate_longer_delim(county, delim = ", ") %>%
+  mutate(county = str_to_sentence(county),
+         agency_type = if_else(agency_type == "Other State Agency", "Other", agency_type),
+         agency_type = replace_na(agency_type, "Unknown"))
+
+
+#Joining to the usa map
+state_sf2 <- states_sf %>%
+  left_join(agn, by = join_by("state_name" == "state"))
+
+
+state_total <- state_sf2 %>%
+  group_by(state_name, state_abbr) %>%
+  summarise(total = n())%>%
+  mutate(diff_cat = case_when(total < 200 ~ 1,  ## considerably lower
+                              total >= 200 & total < 400 ~ 2,  ## slightly lower
+                              total >= 400 & total < 600 ~ 3,  ## slightly higher
+                              total >= 600 & total < 800  ~ 4,  ## considerably higher
+                              total >= 800 ~ 5,  ## considerably higher
+),
+diff_cat = factor(diff_cat, levels = 1:5))
+
+
+# Make grid
+grd <- st_make_grid(state_total, # map name
+                  n = c(60,60))%>% # number of cells per longitude/latitude
+                  st_sf()%>% 
+  # add a unique id to each cell
+  # (will be useful later to get back centroids data)
+  mutate(id=row_number())
+
+
+
+# Extract centroids
+cent <- grd%>%
+  st_centroid()
+
+
+
+cent_state <- cent%>%
+  st_intersection(state_total)
+
+
+
+# Make a centroid without geom
+# (convert from sf object to tibble)
+
+cent_no_geom <- cent_state%>%
+  st_drop_geometry()
+
+
+# Join with grid thanks to id column
+grd_clean <- grd%>%
+  left_join(cent_no_geom)
+
+
+ggplot()+
+  geom_sf(data = grd_clean%>%drop_na(),
+          aes(geometry=geometry, fill = diff_cat)) +
+  geom_sf(data = cent_state, aes(geometry=geometry), fill=NA, pch=21, size=0.5) +
+  geom_sf_text(data = states_sf, aes(label = state_abbv), colour = "white") +
+  scale_fill_manual(values = pal2, label=c("<200","<400","<600","<800", ">800")) +
+  labs(title = "Agencies Distribution from the\nFBI Crime Data API",
+       fill = "Counts",
+       caption = "Data: FBI Crime Data API • Viz: Ifeoma Egbogah") +
+  
+  guides(fill=guide_legend(nrow=1, title.position="top", label.position="bottom")) +
+  theme_custom
+```
+
+
+```{r}
+
+## convert PDFs to PNGs
+
+ggsave(here::here("2025", "Agencies from the FBI Crime Data API", "fbi.pdf"),  width = 10, height = 7.402, units = "in", device = cairo_pdf)
+
+pdftools::pdf_convert(here::here("2025", "Agencies from the FBI Crime Data API", "fbi.pdf"), format = "png", dpi = 500)
+
+
+
+
+```
+
