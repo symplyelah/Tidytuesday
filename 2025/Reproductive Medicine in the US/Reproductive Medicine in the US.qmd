@@ -1,0 +1,148 @@
+---
+title: "Academic Literature on Racial and Ethnic Disparities in Reproductive Medicine in the US"
+format: html
+editor: visual
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+
+library(tidyverse)
+library(tidytext)
+library(ggtext)
+library(topicmodels)
+library(patchwork)
+library(cowplot)
+library(systemfonts)
+theme_set(theme_light())
+
+article_dat <- readr::read_csv("https://kcorreia.people.amherst.edu/repro_med_disparities-article-level-data.csv")
+
+
+pal <- c("#bb3e03","#ee9b00","#e9d8a6","#94d2bd","#0a9396", "black")
+
+```
+
+```{r}
+
+data("stop_words")
+
+
+article_abs <-  article_dat %>% 
+  select(pmid, doi, year, journal, keywords, abstract) %>% 
+  mutate(abstract = str_replace_all(abstract, "[^[:ascii:]]", ""),
+         abstract = str_remove_all(abstract, "[0-9]+|[[:punct:]]"),
+         abstract = str_remove_all(abstract, regex("ci", ignore_case = TRUE)),  
+         abstract = str_trim(abstract)) %>% 
+
+  unnest_tokens(word, abstract) %>% 
+  anti_join(stop_words) %>% 
+  count(journal, word, sort = TRUE) 
+
+
+#topic modelling
+journal_cast_abs <- article_abs %>% 
+  cast_dtm(journal, word, n)
+
+journal_lda_abs <- LDA(journal_cast_abs, k = 6, control = list(seed = 1234))
+ 
+
+```
+
+```{r}
+
+
+a <- tidy(journal_lda_abs, matrix = "gamma") %>%
+  mutate(document = str_to_title(reorder(document, gamma * topic))) %>%
+  ggplot(aes(factor(topic), gamma)) +
+  geom_boxplot(aes(colour = factor(topic)), size = 1.8, show.legend = FALSE) +
+  facet_wrap(~ document) +
+  scale_colour_manual(values = pal) +
+  labs(title = "Distribution of Research Topics Across High-Impact Ob/Gyn Journals",
+       subtitle = "American Journal of Obstetrics and Gynecology is strongly associated with <b style='color:#bb3e03'>Topic 1 (racial disparities in maternal health).</b>
+Gynecologic Oncology is almost entirely linked to <b style='color:#ee9b00'>Topic 2 (cancer<br>-related topic).</b>
+Fertility and Sterility is highly associated with <b style='color:#e9d8a6'>Topic 3 (infertility and reproductive health).</b>
+BJOG: An International Journal of Obstetrics and Gynecology is mostly linked to <br> <b style='color:#94d2bd'>Topic 4 (birth outcome by ethnicity).</b>
+Human Reproduction has a high proportion of <b style='color:#0a9396'>Topic 5 (pregnancy risks).</b>
+Obstetrics and Gynecology is strongly associated with<br> <b style='color:black'>Topic 6 (maternal health disparities).</b>",
+caption = "Data: American Journal of Obstetrics and Gynecology • Visualization: Ifeoma Egbogah",
+       y = expression(gamma),
+       x = "Topic") +
+  
+  theme_minimal() +
+  
+  theme(plot.title = element_markdown(size = 50, color = "black", hjust = 0.5, face = "bold", margin = margin(5, 35, 50, 35)),
+      plot.subtitle = element_markdown(size = 30, colour = "grey18", hjust = 0.5, margin = margin(8, 35, 50, 35)),
+      plot.caption = element_text(size = 30),
+      axis.text.x = element_text(size = 35),
+       axis.text.y = element_text(size = 35),
+      axis.title = element_text(face = "bold", size = 35),
+      strip.text.x = element_text(size = 28))
+
+
+
+
+```
+
+
+```{r}
+
+tidy_journal_lda <- tidy(journal_lda_abs, matrix = "beta")
+
+b <- tidy_journal_lda %>% 
+  mutate(topic = fct_reorder(factor(topic, levels = c("1", "2", "3", "4", "5", "6")), beta),
+         topic = fct_relevel(topic, "1", "2", "3", "4", "5", "6")) %>% 
+  group_by(topic) %>% 
+  slice_max(beta, n = 10) %>% 
+  arrange(topic, desc(beta)) %>% 
+  ggplot(aes(topic, beta)) +
+  
+  geom_col(aes(group = factor(term), fill = topic),  position = position_dodge(width = 0.9), size = .001, show.legend = FALSE) +
+  
+  geom_text(aes(label = term, group = term, y = 0.002), position = position_dodge(width = 0.9), vjust = 0.3,, size = 7, colour = "white", fontface = "bold" ) + 
+  
+  ggrepel::geom_text_repel(data = tidy_journal_lda %>% 
+                             group_by(topic) %>% 
+                             slice_max(beta, n = 1) %>% 
+                             mutate(topic2 = paste0("Topic ", topic)),
+                              aes(label = topic), size = 35, hjust = -0.9, vjust = -0.5, color = "grey12", bg.color = "white", bg.r = .1 , segment.color = NA) +
+  
+  coord_flip() +
+  
+  scale_fill_manual(values = pal) +
+  
+  labs(y = expression(beta),
+       x = "Topic",
+       title = "Exploring Racial and Ethnic Disparities in Reproductive Medicine: Topic Analysis",
+       subtitle = str_wrap("<b style='color:#bb3e03'>Topic 1</b> has words like <b style='color:#bb3e03'>women, black, confidence, risk, maternal, and disparities</b>, suggesting it might relate to <b style='color:#bb3e03'>racial disparities in maternal healthcare</b>. <b style='color:#ee9b00'>Topic 2</b> includes <b style='color:#ee9b00'>patients,<br> cancer, survival, treatment, and ovarian</b>, indicating a <b style='color:#ee9b00'>cancer treatment-related topic</b>. <b style='color:#e9d8a6'>Topic 3</b> has words like <b style='color:#e9d8a6'>infertility, pregnancy, birth, fertility, Asian, and hispanic</b>, which suggests <br> a focus on <b style='color:#e9d8a6'>fertility treatments and racial disparities in reproductive health</b>. <b style='color:#94d2bd'>Topic 4</b> emphasizes <b style='color:#94d2bd'>non-Hispanic, adjusted, severe, delivery, ethnicity, and factors</b>, indicating a focus<br> on <b style='color:#94d2bd'>birth outcomes by ethnicity</b>. <b style='color:#0a9396'>Topic 5</b> includes <b style='color:#0a9396'>pregnancy, fibroids, cardiovascular, disease, and GDM (gestational diabetes mellitus)</b>, suggesting a focus on <b style='color:#0a9396'>pregnancy-related <br>health risks</b>.<b style='color:black'>Topic 6</b> has <b style='color:black'>maternal, black, white, race, hispanic, mortality, cesarean, and care</b>, suggesting a topic on <b style='color:black'>maternal health disparities and mortality</b>.")) +
+  
+  theme_minimal() +
+  
+  theme(plot.title = element_markdown(size = 50, color = "black", hjust = 0.5, face = "bold", margin = margin(5, 35, 50, 35)),
+      plot.subtitle = element_markdown(size = 30, colour = "grey18", hjust = 0.5, margin = margin(5, 35, 50, 35)),
+      plot.caption = element_text(size = 30),
+      axis.text.x = element_text(size = 35),
+       axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+      axis.title = element_text(face = "bold", size = 35))
+
+  
+ 
+
+
+```
+
+```{r}
+
+combined_plot <- b / a + plot_layout(guides = "collect")
+
+ggsave(here::here("2025", "Reproductive Medicine in the US", "art.pdf"), 
+       plot = combined_plot, width = 40, height = 45, dpi = 400)
+
+
+pdftools::pdf_convert(here::here("2025", "Reproductive Medicine in the US", "art.pdf"), format = "png", dpi = 400)
+
+
+
+```
