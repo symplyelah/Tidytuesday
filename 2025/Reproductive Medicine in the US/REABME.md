@@ -1,0 +1,2 @@
+### [Week 2025/08](https://github.com/symplyelah/Tidytuesday/blob/master/2025/Reproductive%20Medicine%20in%20the%20US/Reproductive%20Medicine%20in%20the%20US.qmd) ⚱️ Academic Literature on Racial and Ethnic Disparities in Reproductive Medicine in the US [American Journal of Obstetrics and Gynecology ](https://www.ajog.org/article/S0002-9378(24)00775-0/fulltext)
+![./2025/Reproductive%20Medicine%20in%20the%20US/art_1.png](https://github.com/symplyelah/Tidytuesday/blob/master/2025/Reproductive%20Medicine%20in%20the%20US/art_1.png)
