@@ -135,10 +135,10 @@ b <- tidy_journal_lda %>%
 
 ```{r}
 
-combined_plot <- b / a + plot_layout(guides = "collect")
+combined_plots <- b / a + plot_layout(guides = "collect")
 
 ggsave(here::here("2025", "Reproductive Medicine in the US", "art.pdf"), 
-       plot = combined_plot, width = 40, height = 45, dpi = 400)
+       plot = combined_plots, width = 40, height = 45, dpi = 400)
 
 
 pdftools::pdf_convert(here::here("2025", "Reproductive Medicine in the US", "art.pdf"), format = "png", dpi = 400)
