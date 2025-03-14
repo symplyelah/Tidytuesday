@@ -1,0 +1,124 @@
+---
+title: "Long Beach Animal Shelter"
+output: html_document
+date: "2025-03-12"
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+
+library(tidyverse)
+library(sf)
+library(patchwork)
+library(showtext)
+
+theme_set(theme_light())
+
+font_add_google("Zilla Slab",
+  family = "title_font") 
+
+showtext_auto()
+
+
+longbeach <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2025/2025-03-04/longbeach.csv')
+
+
+water <- st_read(here::here("2025", "Long Beach Animal Shelter", "Waterways", "Waterways.shp"))
+
+lines <- st_read(here::here("2025", "Long Beach Animal Shelter", "Centerlines", "Centerlines.shp"))
+
+map <- st_read(here::here("2025", "Long Beach Animal Shelter", "colb-council-districts", "colb-council-districts.shp"))
+
+```
+
+
+```{r}
+
+pal <- wesanderson::wes_palette("Rushmore1", 9, "continuous")
+
+lb <- longbeach %>% 
+  mutate(year = year(intake_date)) 
+  
+
+lb_sf <- st_as_sf(lb, coords = c("longitude", "latitude"), crs = "EPSG:4326")
+
+
+map_poly <- map %>% 
+  st_join(lb_sf) %>% 
+  drop_na(council_num)
+
+water <- st_transform(water, crs = "EPSG:4326")
+lines <- st_transform(lines, crs = "EPSG:4326")
+
+
+  
+p <- map %>% 
+  ggplot() +
+  geom_sf() +
+  geom_sf(data = map_poly %>% 
+            group_by(year, council_num) %>% 
+            summarise(total = n()), 
+          aes(fill = total), colour = "grey85", show.legend = F) +
+  geom_sf(data = lines, colour = "white", alpha = 0.2)+
+  facet_wrap(~year, nrow = 1) +
+  scale_fill_gradientn(colours = pal) +
+  labs(fill = "Total",
+       title = "Tracking Trends: Long Beach Animal Shelter Intake (2017–2024)",
+       subtitle = str_wrap("Animal shelter intake peaked in earlier years but saw a sharp decline in 2020 and 2021, likely due to the pandemic's impact on pet surrenders and stray captures. Intake gradually rebounded from 2022 onward, though patterns remain uneven across regions.", width = 100)) +
+  theme_minimal() +
+  theme(plot.title = element_text(colour = "white", face = "bold", hjust = 0.5, size = 27),
+        plot.caption = element_text(hjust = 0.5),
+        plot.subtitle =  element_text(hjust = 0.5, colour = "white"),
+        axis.title = element_blank(),
+        axis.text = element_blank(),
+        panel.grid = element_blank(),
+        plot.background = element_rect(fill = "grey18", colour=NA),
+        legend.title = element_text(hjust=0.5, color="white", face="bold"),
+      legend.text = element_text(colour="white"),
+      strip.text = element_text(colour = "white"))
+
+
+p2 <- map %>% 
+  ggplot() +
+  geom_sf() +
+  geom_sf(data = map_poly %>% 
+            group_by(council_num) %>% 
+            summarise(total = n()), 
+          aes(fill = total), colour = "grey85") +
+  geom_sf(data = lines, colour = "white", alpha = 0.5) +
+  scale_fill_gradientn(colours = pal) +
+  labs(caption = "Data: Long Beach Animal Shelter • Visualisation: Ifeoma Egbogah",
+       fill = "Total") +
+  theme_minimal() +
+  theme(plot.caption = element_text(hjust = 0.5, colour = "white"),
+        axis.title = element_blank(),
+        axis.text = element_blank(),
+        panel.grid = element_blank(),
+        plot.background = element_rect(fill = "grey18", colour=NA),
+        legend.position = "bottom",
+        legend.title = element_text(hjust=0.5, color="white", face="bold"),
+        legend.title.position = "top",
+        legend.text = element_text(colour="white"))
+
+
+
+p/p2 + plot_layout(widths = c(8, 10), heights = c(4, 8))
+
+```
+
+
+```{r}
+
+ggsave(here::here("2025", "Long Beach Animal Shelter", "long.pdf"),  width = 12, height = 7.402, units = "in", device = cairo_pdf)
+
+pdftools::pdf_convert(here::here("2025", "Long Beach Animal Shelter", "long.pdf"), format = "png", dpi = 500)
+
+
+```
+
