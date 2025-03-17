@@ -1,0 +1,132 @@
+---
+title: "Pixar Film"
+output: html_document
+date: "2025-03-17"
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+
+library(tidyverse)
+library(gameofthrones)
+library(showtext)
+library(systemfonts)
+library(ggtext)
+library(nord)
+library(werpals)
+library(patchwork)
+system_fonts()
+
+#devtools::install_github("sciencificity/werpals") disney colours
+
+font_add(family = "Charlemagne Std", regular = "C:/Users/dell/AppData/Local/Microsoft/Windows/Fonts/CharlemagneStd-Bold.otf", bold = "C:/Users/dell/AppData/Local/Microsoft/Windows/Fonts/CharlemagneStd-Bold.otf")
+
+showtext_auto()
+
+
+pixar_films <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2025/2025-03-11/pixar_films.csv')
+public_response <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2025/2025-03-11/public_response.csv')
+
+theme_set(theme_light())
+
+```
+
+
+```{r}
+
+film <- pixar_films %>% 
+  inner_join(public_response)
+
+
+data <- tibble(x = ymd("2017-01-01"),
+               y = 17) 
+
+film %>% 
+  group_by(cinema_score) %>% 
+  summarise(tot = n()) %>% 
+  ungroup() %>% 
+  mutate(prop = tot/sum(tot))
+
+p1 <- film %>% 
+  mutate(cinema_score = replace_na(cinema_score, "NA")) %>% 
+  mutate(year = year(release_date),
+         film = glue::glue("{film} ({year})"),
+         film = fct_reorder(film, run_time)) %>%
+  ggplot(aes(run_time, film, fill = cinema_score)) +
+  geom_col() +
+  scale_x_continuous(expand = c(.02, .02)) +
+  scale_fill_nord(palette = "victory_bonds") +
+  labs(title = "Pixar Films",
+       subtitle = "Pixar magic shines through with 55% of its films earning a solid ‘A’ from CinemaScore, while 23% achieved the coveted ‘A+’—a testament to their brilliance. Another 14% landed an ‘A-’, showing strong audience approval. However, 9% remain unrated, adding a touch of mystery to the mix. How does your favorite Pixar film rank?",
+       x = "Run Time",
+       y = " ",
+       fill = "Cinema Score") +
+  theme(plot.title =  element_text(family = "Charlemagne Std", size = 30),
+        legend.position = "bottom",
+        legend.text =  element_text(family = "Charlemagne Std"),
+        legend.title =  element_text(family = "Charlemagne Std", hjust = 0.5),
+        legend.title.position = "top",
+        panel.grid.major.y = element_blank(),
+        panel.border = element_rect(color = "transparent"),
+        plot.subtitle = element_textbox_simple(face = "italic", size = 11, margin = unit(c(0.07, 0, 0.2, 0), "inch")),
+        axis.text= element_text(size = 12),
+        axis.ticks = element_blank(),
+        axis.title = element_text(size = 15))
+  
+
+ 
+  
+p2 <- film %>% 
+  pivot_longer(cols = c(6, 7, 9), names_to = "critic", values_to = "ratings") %>% 
+  mutate(critic = str_to_title(str_replace_all(critic, "_", " "))) %>% 
+  group_by(film) %>% 
+  ggplot(aes()) +
+  geom_point(aes(release_date, ratings, colour = critic), size = 3) +
+  geom_line(aes(release_date, ratings, group = critic, colour = critic), linewidth = 0.8) +
+  geom_smooth(aes(release_date, ratings),alpha = 0.2) +
+  geom_richtext(data = data, aes(x, y, label = "**Pixar film ratings over time from three critic sources: <span style='color:#1f4a98;'>Rotten Tomatoes</span>, <span style='color:#d28f19;'>Metacritic</span>, and <span style='color:#c42e1f'>Critics Choice</span>.<br>** Most Pixar films received high ratings, with *Toy Story, Finding Nemo, Up*, and *Inside Out* among the best-rated.<br> However, *Cars 2* stands out as a significant outlier with notably low ratings. **<span style='color:#1f4a98;'>Rotten Tomatoes</span>** scores are generally<br> higher, while **<span style='color:#d28f19;'>Metacritic</span>** ratings show more fluctuation. Despite some inconsistencies, Pixar films have maintained<br> strong critical acclaim overall. There is a notable dip in the trend line from 2005 to 2012, reflecting a temporary<br> decline in ratings. This period includes lower-rated films like *Cars (2006), Cars 2 (2011)*, and *Brave (2012)*, which<br> received more mixed reviews compared to Pixar’s earlier successes. However, ratings rebounded after 2012<br> with hits like *Inside Out* and *Coco*, confirming Pixar’s enduring success in animation."), hjust = 0.85, size = 4.2) +
+
+  ggrepel::geom_text_repel(data = film, aes(release_date, rotten_tomatoes, label = film)) +
+  scale_y_continuous(limits = c(0, 100)) +
+  scale_colour_nord(palette = "victory_bonds") +
+  
+  labs(#title = "Pixar Films Rating",
+       x = "Release Date",
+       y = "Ratings",
+       colour = "Critic",
+       caption = "Data: Pixar • Visualization: Ifeoma Egbogah") +
+  theme(plot.title = element_text(family = "Charlemagne Std", size = 30, hjust = 0.5),
+        plot.caption = element_text(family = "Charlemagne Std"),
+        panel.border = element_rect(color = "transparent"),
+        legend.position = "bottom",
+        legend.text =  element_text(family = "Charlemagne Std"),
+        legend.title =  element_text(family = "Charlemagne Std", hjust = 0.5),
+        legend.title.position = "top",
+        axis.text= element_text(size = 12),
+        axis.title = element_text(size = 15))
+
+
+```
+
+
+
+```{r}
+
+p1 + p2 + plot_layout(widths = c(20, 25), heights = c(20, 40), nrow = 1)
+
+```
+
+
+```{r}
+ggsave(here::here("2025", "Pixar Film", "pixar.pdf"),  width = 20, height = 9, units = "in", device = cairo_pdf)
+
+pdftools::pdf_convert(here::here("2025", "Pixar Film", "pixar.pdf"), format = "png", dpi = 500)
+
+
+```
+
