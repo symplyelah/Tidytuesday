@@ -108,3 +108,28 @@ This is my repository for #tidytuesday entries where I will analyse and create d
 ![./2025/Donuts%2C%20Data%2C%20and%20D'oh%20-%20A%20Deep%20Dive%20into%20The%20Simpsons/simpson.png](https://github.com/symplyelah/Tidytuesday/blob/master/2025/Donuts%2C%20Data%2C%20and%20D'oh%20-%20A%20Deep%20Dive%20into%20The%20Simpsons/simpson.png)
 
 ***
+### [Week 2025/07](https://github.com/symplyelah/Tidytuesday/blob/master/2025/Agencies%20from%20the%20FBI%20Crime%20Data%20API/Agencies%20from%20the%20FBI%20Crime%20Data%20API.Rmd) ⚱️ Agencies from the FBI Crime Data API Dataset [FBI Crime Data](https://cde.ucr.cjis.gov/LATEST/webapp/#/pages/docApi)
+![./2025/Agencies%20from%20the%20FBI%20Crime%20Data%20API/fbi_1.png](https://github.com/symplyelah/Tidytuesday/blob/master/2025/Agencies%20from%20the%20FBI%20Crime%20Data%20API/fbi_1.png)
+
+***
+### [Week 2025/08](https://github.com/symplyelah/Tidytuesday/blob/master/2025/Reproductive%20Medicine%20in%20the%20US/Reproductive%20Medicine%20in%20the%20US.qmd) ⚱️ Academic Literature on Racial and Ethnic Disparities in Reproductive Medicine in the US [American Journal of Obstetrics and Gynecology ](https://www.ajog.org/article/S0002-9378(24)00775-0/fulltext)
+![./2025/Reproductive%20Medicine%20in%20the%20US/art_1.png](https://github.com/symplyelah/Tidytuesday/blob/master/2025/Reproductive%20Medicine%20in%20the%20US/art_1.png)
+
+***
+### [Week 2025/09](https://github.com/symplyelah/Tidytuesday/blob/master/2025/Long%20Beach%20Animal%20Shelter/Long%20Beach%20Animal%20Shelter.Rmd) ⚱️  Long Beach Animal Shelter [Animal Shelter](https://www.longbeach.gov/acs/)
+![./2025/Long%20Beach%20Animal%20Shelter/long.png](https://github.com/symplyelah/Tidytuesday/blob/master/2025/Long%20Beach%20Animal%20Shelter/long.png)
+
+***
+
+### [Week 2025/10](https://github.com/symplyelah/Tidytuesday/blob/master/2025/Pixar%20Film/pixar.Rmd) ⚱️  Pixar Films Rating [Pixar Film](https://github.com/erictleung/pixarfilms)
+![./2025/Pixar%20Film/pixar_1.png](https://github.com/symplyelah/Tidytuesday/blob/master/2025/Pixar%20Film/pixar_1.png)
+
+***
+### [Week 2025/13](https://github.com/symplyelah/Tidytuesday/blob/master/2025/Pokemon/poke.Rmd) ⚱️ Pokemon [Pokemon R Package](https://github.com/williamorim/pokemon)
+![./2025/Pokemon/pokemon.png](https://github.com/symplyelah/Tidytuesday/blob/master/2025/Pokemon/pokemon.png)
+
+***
+### [Week 2025/13](https://github.com/symplyelah/Tidytuesday/blob/master/2025/Timely%20and%20Effective%20Care/timely%20care.Rmd) ⚱️ Timely and Effective Care [Timely and Effective Care by US State](https://data.cms.gov/provider-data/dataset/apyc-v239)
+![./2025/Timely%20and%20Effective%20Care/timely_care.png](https://github.com/symplyelah/Tidytuesday/blob/master/2025/Timely%20and%20Effective%20Care/timely_care.png)
+
+***
