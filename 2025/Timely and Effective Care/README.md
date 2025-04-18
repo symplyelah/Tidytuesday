@@ -1,0 +1,2 @@
+### [Week 2025/13](https://github.com/symplyelah/Tidytuesday/blob/master/2025/Timely%20and%20Effective%20Care/timely%20care.Rmd) ⚱️ Timely and Effective Care [Timely and Effective Care by US State](https://data.cms.gov/provider-data/dataset/apyc-v239)
+![./2025/Timely%20and%20Effective%20Care/timely_care.png](https://github.com/symplyelah/Tidytuesday/blob/master/2025/Timely%20and%20Effective%20Care/timely_care.png)
