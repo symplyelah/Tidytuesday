@@ -1,0 +1,158 @@
+---
+title: "Timely and Effective Care by US State"
+author: "Ifeoma Egbogah"
+output: html_document
+date: "2025-04-15"
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+
+library(tidyverse)
+library(urbnmapr)
+library(cowplot)
+library(biscale)
+library(sf)
+library(showtext)
+
+
+theme_set(theme_light())
+
+care_state <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2025/2025-04-08/care_state.csv')
+
+font_add(family = "Arvo", regular = "C:/Users/dell/AppData/Local/Microsoft/Windows/Fonts/Arvo-Regular.ttf", bold = "C:/Users/dell/AppData/Local/Microsoft/Windows/Fonts/Arvo-Bold.ttf", italic = "C:/Users/dell/AppData/Local/Microsoft/Windows/Fonts/Arvo-Italic.ttf")
+
+showtext_auto()
+
+custom_bi_pal <- c("#fee871", "#fe8337", "#732700", "#9f7900",
+"#fede66", "#f3641e", "#4f0c00", "#8a5d00",
+"#ffca5a", "#d25506", "#723300", "#786901",
+"#ffaa4e", "#a33f00", "#b17400", "#3f4903")
+
+names(custom_bi_pal) <- as.vector(outer(1:4, 1:4, paste, sep = "-"))
+
+
+# This color grid is handpicked for bivariate maps (4x4)
+custom_bi_pal2 <- c(
+  "#e8e8e8", "#b5c0da", "#6c83b5", "#403369",
+  "#c5d5d8", "#97b5c1", "#5a89a5", "#2a5674",
+  "#b8d6be", "#90b2b3", "#567994", "#1e455e",
+  "#a5cfa3", "#73a07c", "#446a73", "#0b2e46"
+)
+
+names(custom_bi_pal2) <- as.vector(outer(1:4, 1:4, paste, sep = "-"))
+
+
+```
+
+
+```{r}
+
+covid <- care_state %>% 
+  filter(measure_id == "HCP_COVID_19") %>% 
+  select(-end_date, -start_date, -measure_name, -footnote, -condition) 
+
+
+flu <- care_state %>% 
+  filter(measure_id == "IMM_3") %>% 
+  select(-end_date, -start_date, -measure_name, -footnote, -condition) 
+
+state <- get_urbn_map(map = "states", sf = TRUE)
+
+counties <- get_urbn_map(map = "counties", sf = TRUE)
+
+hp_join <- covid %>% 
+  inner_join(flu, by = join_by('state' == 'state')) %>% 
+  janitor::clean_names()
+
+hp_class <- hp_join %>% 
+  drop_na() %>% 
+  bi_class(x  = score_x, y = score_y, dim = 4, style = "quantile")
+  
+hp_usa <- hp_class %>% 
+  left_join(state, by = join_by(state == state_abbv)) 
+
+hp_usa2 <- state %>% 
+  left_join(hp_class, by = join_by(state_abbv == state)) %>% 
+  drop_na()
+
+map <-   state %>% 
+  ggplot() +
+  geom_sf() +
+  geom_sf(data = hp_usa, aes(fill = bi_class, geometry = geometry), colour = "grey95", show.legend = FALSE) +
+  geom_sf(data = counties, fill = "transparent", colour = "grey85") + 
+  geom_sf_text(data = state, aes(label = state_abbv), colour = "white", fontface = "bold") +
+  scale_fill_manual(values = custom_bi_pal) +
+  theme_minimal() +
+  labs(title = "Jab and Go: A Tale of Two Vaccines",
+       subtitle = str_wrap("Flu vaccination coverage is generally higher than COVID coverage in many states — indicating a greater long-term acceptance and familiarity with the flu vaccine. There is a regional variation, with some states performing well across both metrics and others lagging significantly.", width = 100),
+       caption = "Data: Centers for Medicare and Medicaid Services (CMS) • Visualisation: Ifeoma Egbogah") +
+  theme(axis.text = element_blank(),
+        axis.title = element_blank(),
+        plot.background = element_rect(fill ="lightblue"),
+        plot.title = element_text(hjust = 0.5, family = "Arvo", size = 35, colour = "#723300"),
+        plot.subtitle = element_text(hjust = 0.5, family = "Arvo", size = 12),
+        plot.caption = element_text(hjust = 0.5, family = "Arvo", face = "italic", colour = "#723300", size = 10))
+
+
+legend <- 
+  bi_legend(pal = custom_bi_pal,
+                    dim = 4,
+                    xlab = "COVID-19 ",
+                    ylab = "Flu ",
+                    size = 8,
+                    pad_color = "transparent")
+
+legend2 <- legend + 
+  labs(title = "Class") +
+  theme(
+    axis.title = element_text(size = 10),
+    plot.title = element_text(size = 12),
+    panel.grid.major = element_blank(),
+    plot.background = element_rect(fill = "transparent", color = NA),     panel.background = element_rect(fill = "transparent", color = NA))
+
+
+ggdraw() +
+  draw_plot(map, 0, 0, 1, 1) +
+  draw_plot(legend2, 0.68, 0.03, 0.2, 0.2)
+ 
+
+ggsave(here::here("2025", "Timely", "timely.pdf"),  width = 20, height = 9, units = "in", device = cairo_pdf)
+
+pdftools::pdf_convert(here::here("2025", "Timely", "timely.pdf"), format = "png", dpi = 500)
+
+```
+
+
+```{r}
+
+library(gt)
+
+
+class_hp <- data.frame(
+  flu_covid = c("1 (<75%)", "2 (76–82%)", "3 (83–87%)", "4 (>88%)"),
+  c1 = c("1-1", "1-2", "1-3", "1-4"),
+  c2 = c("2-1", "2-2", "2-3", "2-4"),
+  c3 = c("3-1", "3-2", "3-3", "3-4"),
+  c4 = c("4-1", "4-2", "4-3", "4-4"))
+
+class_hp %>%
+  gt() %>%
+  tab_header(
+    title = md("**Bivariate Classification Table**"),
+    subtitle = "COVID-19 vs. Flu Vaccination Among Health Care Workers") %>%
+  cols_label(
+    flu_covid = "Flu ↓ / COVID →",
+    c1 = "1 (<8%)",
+    c2 = "2 (8–11.5%)",
+    c3 = "3 (11.6–18%)",
+    c4 = "4 (>19%)")
+
+
+```
+

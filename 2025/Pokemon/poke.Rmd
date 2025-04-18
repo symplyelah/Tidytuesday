@@ -1,0 +1,232 @@
+---
+title: "Pokemon"
+author: "Ifeoma Egbogah"
+output: html_document
+date: "2025-04-11"
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(tidytext)
+library(circlize)
+library(png)
+
+theme_set(theme_light())
+
+pokemon_df <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2025/2025-04-01/pokemon_df.csv')
+
+
+```
+
+
+```{r}
+
+type_means <- pokemon_df %>%
+  group_by(type_1) %>%
+  summarise(mean_attack = mean(attack, na.rm = TRUE)) %>%
+  arrange(desc(mean_attack))
+
+
+aov_result <- aov(attack ~ type_1, data = pokemon_df)
+
+tukey <- TukeyHSD(aov_result)
+
+tukey_df <- as.data.frame(tukey$type_1)
+tukey_df$comparison <- rownames(tukey_df)
+
+ 
+tukey_df <- tukey_df %>%
+     mutate(group1 = sub("-.*", "", comparison),
+            group2 = sub(".*-", "", comparison),
+            mean1 = type_means$mean_attack[match(group1, type_means$type_1)],
+         mean2 = type_means$mean_attack[match(group2, type_means$type_1)],
+         direction = ifelse(mean1 > mean2, paste(group1, ">", group2), paste(group2, ">", group1)))
+
+
+
+tukey_df <- tukey_df %>% 
+  mutate(group_a = sub(">.*", "", direction),
+         group_b = sub(".*>", "", direction),
+         group_a = str_trim(group_a),
+         group_b = str_trim(group_b),
+         mean_a = type_means$mean_attack[match(group_a, type_means$type_1)]) 
+
+
+significant_pairs <- tukey_df %>%
+     filter(`p adj` < 0.05)
+
+
+pokemon_sign <- significant_pairs %>% 
+  select(group_a, group_b, mean1) %>% 
+  mutate(mean1 = round(mean1),
+         group_a = str_to_title(group_a),
+         group_b = str_to_title(group_b)) 
+
+pokemon_matrix <- pokemon_sign %>%
+  pivot_wider(names_from = group_b, values_from = mean1, values_fill = 0)
+
+pokemon_matrix <- as.data.frame(pokemon_matrix)
+rownames(pokemon_matrix) <- pokemon_matrix$group_a
+pokemon_matrix <- pokemon_matrix[, -1]
+
+pokemon_matrix <- as.matrix(pokemon_matrix)
+
+#grid.col = c("Dragon" = "#FFD700", "Fighting" = "#98FF98", "Ground" = "#008080", "Rock" = "yellow", "Steel" = "grey9", "Bug" = "grey85", "Electric" = "grey85", "Fairy" = "grey85",  "Fire" = "grey85", "Ghost" = "grey85", "Grass" = "grey85", "Ice" = "grey85", "Normal" = "grey85", "Poison" = "grey85", "Psychic" = "grey85",  "Water" = "grey85")
+
+
+grid.col = c("Dragon" = "#008585", "Fighting" = "#9BBAA0", "Ground" = "#FBF2C4", "Rock" = "#DEA868", "Steel" = "#C7522B", "Bug" = "grey85", "Electric" = "grey85", "Fairy" = "grey85",  "Fire" = "grey85", "Ghost" = "grey85", "Grass" = "grey85", "Ice" = "grey85", "Normal" = "grey85", "Poison" = "grey85", "Psychic" = "grey85",  "Water" = "grey85")
+
+
+ #hcl.colors(10, "Geyser")
+
+circos.clear()
+circos.par(start.degree = 180)
+
+png(file = "attack.png", width = 1000, height = 800)
+
+chordDiagram(pokemon_matrix, 
+             big.gap = 20, 
+             grid.col = grid.col, 
+             link.sort = TRUE, 
+             link.decreasing = TRUE,
+             scale = TRUE,
+             transparency = 0.2,
+             annotationTrack = "grid",
+             annotationTrackHeight =  0.03,
+             directional = -1,
+             diffHeight = mm_h(0.5),
+             preAllocateTracks = list(track.height = 0.1))
+
+
+circos.trackPlotRegion(track.index = 1, panel.fun = function(x, y) {
+  sector.name = get.cell.meta.data("sector.index")
+  xlim = get.cell.meta.data("xlim")
+  ylim = get.cell.meta.data("ylim")
+  circos.text(x = mean(xlim), y = ylim[1] + .5, 
+              labels = sector.name, cex = 1.5, font = 1.5)
+}, bg.border = NA)
+
+
+title(main = list("Battle of the Types: Who Hits the Hardest?", cex = 2))
+
+mtext("Dragon, Ground, Steel, Fighting, and Rock types dominate the attack stats among Pokémon.", side = 3, line = -1.6, cex = 1.2)
+
+mtext("Data: Pokemon • Viz: Ifeoma Egbogah.", side = 1, line = 0, cex = 1)
+
+dev.off()
+
+
+```
+
+
+
+```{r}
+
+defense_means <- pokemon_df %>%
+  group_by(type_1) %>%
+  summarise(mean_attack = mean(defense, na.rm = TRUE)) %>%
+  arrange(desc(mean_attack))
+
+
+aov_result2 <- aov(defense ~ type_1, data = pokemon_df)
+
+tukey2 <- TukeyHSD(aov_result2)
+
+tukey_df2 <- as.data.frame(tukey2$type_1)
+tukey_df2$comparison <- rownames(tukey_df2)
+
+ 
+tukey_df2 <- tukey_df2 %>%
+     mutate(group1 = sub("-.*", "", comparison),
+            group2 = sub(".*-", "", comparison),
+            mean1 = defense_means$mean_attack[match(group1, defense_means$type_1)],
+         mean2 = defense_means$mean_attack[match(group2, defense_means$type_1)],
+         direction = ifelse(mean1 > mean2, paste(group1, ">", group2), paste(group2, ">", group1)))
+
+
+
+tukey_df2 <- tukey_df2 %>% 
+  mutate(group_a = sub(">.*", "", direction),
+         group_b = sub(".*>", "", direction),
+         group_a = str_trim(group_a),
+         group_b = str_trim(group_b),
+         mean_a = type_means$mean_attack[match(group_a, type_means$type_1)]) 
+
+
+significant_pairs2 <- tukey_df2 %>%
+     filter(`p adj` < 0.05)
+
+
+pokemon_sign2 <- significant_pairs2 %>% 
+  select(group_a, group_b, mean1) %>% 
+  mutate(mean1 = round(mean1),
+         group_a = str_to_title(str_trim(group_a)),
+         group_b = str_to_title(str_trim(group_b))) 
+
+pokemon_matrix2 <- pokemon_sign2 %>%
+  pivot_wider(names_from = group_b, values_from = mean1, values_fill = 0)
+
+pokemon_matrix2 <- as.data.frame(pokemon_matrix2)
+rownames(pokemon_matrix2) <- pokemon_matrix2$group_a
+pokemon_matrix2 <- pokemon_matrix2[, -1]
+
+pokemon_matrix2 <- as.matrix(pokemon_matrix2)
+
+#grid.col = c("Dragon" = "#FFD700", "Fighting" = "#98FF98", "Ground" = "#008080", "Rock" = "yellow", "Steel" = "grey9", "Bug" = "grey85", "Electric" = "grey85", "Fairy" = "grey85",  "Fire" = "grey85", "Ghost" = "grey85", "Grass" = "grey85", "Ice" = "grey85", "Normal" = "grey85", "Poison" = "grey85", "Psychic" = "grey85",  "Water" = "grey85")
+
+
+grid.col2 = c("Rock" = "#008585", "Steel" = "#85AF97", "Dragon" = "#D0DCB5", "Ghost" = "#EDD59F", "Ground" = "#DA9857", "Water" = "#C7522B", "Bug" = "grey85", "Electric" = "grey85", "Fairy" = "grey85",  "Fire" = "grey85", "Fighting" = "grey85", "Grass" = "grey85", "Ice" = "grey85", "Normal" = "grey85", "Poison" = "grey85", "Psychic" = "grey85", "Dark" = "grey85", "Flying" = "grey85")
+
+
+
+circos.clear()
+circos.par(start.degree = 150, 
+           gap.after= c("Rock" = 1, "Steel" = 1, "Dragon" = 1, "Ghost" = 1, "Ground" = 1, "Water" = 20, "Bug"  =1,    "Dark"  =1,   "Electric" = 1, "Normal" =1,  "Dragon" =1, "Fairy" =1,   "Fighting" =1,  "Fire" =1,    "Flying" =1,  "Ghost" =1, "Grass"=1,    "Ground" =1,  "Ice"   =1,   "Poison" = 1,  "Psychic" =20, "Rock"  =1,   "Water"=1))
+
+
+
+
+png(file = "defense.png", width = 1000, height = 800)
+
+chordDiagram(pokemon_matrix2, 
+             order = union(rownames(pokemon_matrix2), colnames(pokemon_matrix2)),
+             #big.gap = 30, 
+             grid.col = grid.col2, 
+             link.sort = TRUE, 
+             link.decreasing = TRUE,
+             scale = TRUE,
+             transparency = 0.2,
+             annotationTrack = "grid",
+             annotationTrackHeight =  0.03,
+             directional = -1,
+             diffHeight = mm_h(0.5),
+              preAllocateTracks = list(track.height = 0.1))
+
+
+circos.trackPlotRegion(track.index = 1, panel.fun = function(x, y) {
+  sector.name = get.cell.meta.data("sector.index")
+  xlim = get.cell.meta.data("xlim")
+  ylim = get.cell.meta.data("ylim")
+  circos.text(x = mean(xlim), y = ylim[1] + .5, 
+              labels = sector.name, cex = 1.5, font = 1.5)
+}, bg.border = NA)
+
+
+title(main = list("Battle of the Types: Who Hits the Hardest?", cex = 2))
+
+mtext("Dragon, Ground, Steel, Fighting, and Rock types dominate the attack stats among Pokémon.", side = 3, line = -1.6, cex = 1.2)
+
+mtext("Data: Pokemon • Viz: Ifeoma Egbogah.", side = 1, line = 0, cex = 1)
+
+dev.off()
+
+
+```
+
+
