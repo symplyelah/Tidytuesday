@@ -42,6 +42,8 @@ This is my repository for #tidytuesday entries where I will analyse and create d
  - 2025/10 [🐦 Pixar Films](https://github.com/symplyelah/Tidytuesday/tree/master/2025/Pixar%20Film)
  - 2025/13 [🔑 Pokemon](https://github.com/symplyelah/Tidytuesday/tree/master/2025/Pokemon)
  - 2025/14 [🎶 Timely and Effective Care by US State](https://github.com/symplyelah/Tidytuesday/tree/master/2025/Timely%20and%20Effective%20Care)
+ - 2025/15 [⚱️ Palmer Penguins](https://github.com/symplyelah/Tidytuesday/blob/master/2025/Palmer%20Penguins)
+
 
 <!-- tocstop -->
 
@@ -129,7 +131,11 @@ This is my repository for #tidytuesday entries where I will analyse and create d
 ![./2025/Pokemon/pokemon.png](https://github.com/symplyelah/Tidytuesday/blob/master/2025/Pokemon/pokemon.png)
 
 ***
-### [Week 2025/13](https://github.com/symplyelah/Tidytuesday/blob/master/2025/Timely%20and%20Effective%20Care/timely%20care.Rmd) ⚱️ Timely and Effective Care [Timely and Effective Care by US State](https://data.cms.gov/provider-data/dataset/apyc-v239)
+### [Week 2025/14](https://github.com/symplyelah/Tidytuesday/blob/master/2025/Timely%20and%20Effective%20Care/timely%20care.Rmd) ⚱️ Timely and Effective Care [Timely and Effective Care by US State](https://data.cms.gov/provider-data/dataset/apyc-v239)
 ![./2025/Timely%20and%20Effective%20Care/timely_care.png](https://github.com/symplyelah/Tidytuesday/blob/master/2025/Timely%20and%20Effective%20Care/timely_care.png)
+
+***
+### [Week 2025/15](https://github.com/symplyelah/Tidytuesday/blob/master/2025/Palmer%20Penguins/Penguins.Rmd) ⚱️ Palmer Penguins [Base R Penguins](https://github.com/rfordatascience/tidytuesday/blob/main/data/2025/2025-04-15/readme.md)
+![.2025/Palmer%20Penguins/palmer_penguins_1.png](https://github.com/symplyelah/Tidytuesday/blob/master/2025/Palmer%20Penguins/palmer_penguins_1.png)
 
 ***
