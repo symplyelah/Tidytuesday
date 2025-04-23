@@ -1,5 +1,6 @@
 ---
 title: "Palmer Penguins"
+author: "Ifeoma Egbogah"
 output: html_document
 date: "2025-04-18"
 editor_options: 
