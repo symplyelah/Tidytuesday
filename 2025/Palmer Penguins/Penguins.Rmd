@@ -1,0 +1,104 @@
+---
+title: "Palmer Penguins"
+output: html_document
+date: "2025-04-18"
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+
+library(tidyverse)
+library(ComplexUpset)
+library(cowplot)
+library(ggtext)
+library(png)
+
+
+
+penguins <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2025/2025-04-15/penguins.csv')
+
+palmer <- readPNG(here::here("2025", "Palmer Penguins", "palmer.png"))
+
+```
+
+
+```{r}
+
+penguin_species <- penguins %>% 
+  mutate(Adelie = species == "Adelie",
+         Chinstrap = species == "Chinstrap",
+         Gentoo = species == "Gentoo",
+         Biscoe = island == "Biscoe",
+         Dream = island == "Dream",
+         Torgersen = island == "Torgersen") 
+  select(adelie, chinstrap, gentoo, biscoe, dream, torgersen)
+
+
+penguin_species <- penguin_species %>%
+  mutate(intersection_label = apply(., 1, function(row) {
+    active_sets <- names(row)[which(row == TRUE)]
+    if (length(active_sets) == 0) return("None")
+    paste(sort(active_sets), collapse = "&")
+  }),
+  intersection_label = str_trim(intersection_label))
+
+
+
+
+upset(penguin_species, 
+      intersect = c("adelie", "chinstrap", "gentoo", "biscoe", "dream", "torgersen"),
+      name = "Palmer Penguin Set",
+      base_annotations = list(
+         'Intersection Size' = intersection_size(),
+          'Intersection ratio' = intersection_ratio())
+  )
+ 
+
+
+p <- 
+  upset(penguin_species, 
+       intersect = c("Adelie", "Chinstrap", "Gentoo", "Biscoe", "Dream", "Torgersen"),
+      name = "Penguin Set",
+      
+      queries = list(
+        upset_query(intersect = c("Adelie", "Torgersen"), color = 'darkorange', fill = 'darkorange'),
+        upset_query(intersect = c("Adelie", "Biscoe"), color = 'darkorange', fill = 'darkorange'),
+        upset_query(intersect = c("Adelie", "Dream"), color = 'darkorange', fill = 'darkorange'),
+        upset_query(intersect = c("Gentoo", "Biscoe"), color = 'cyan4', fill = 'cyan4'),
+        upset_query(intersect = c("Chinstrap", "Dream"), color = 'purple', fill = 'purple')
+      ),
+      
+      annotations = list(
+        'Body Mass' = ggplot(mapping = aes(y = body_mass)) +
+                       geom_jitter(aes(color = intersection_label)) +  
+                       geom_boxplot(aes(color = intersection_label), fill = "transparent") +
+          scale_y_continuous(limits = c(0, 6000)) +
+                       scale_color_manual(values = c("Adelie&Torgersen" = "darkorange", "Adelie&Biscoe" = "darkorange", "Adelie&Dream" = "darkorange", "Biscoe&Gentoo" = "cyan4", "Chinstrap&Dream" = "purple"), guide = "none")),
+      
+      base_annotations = list(
+        'Intersection Size' = intersection_size(mapping = aes(fill = intersection_label)) +
+           scale_color_manual(values = c("Adelie&Torgersen" = "darkorange", "Adelie&Biscoe" = "darkorange", "Adelie&Dream" = "darkorange", "Biscoe&Gentoo" = "cyan4", "Chinstrap&Dream" = "purple"), guide = "none"))
+      
+) 
+
+
+ggdraw(p) +
+  draw_image(palmer, x = 0, y = 0.5, width = 0.3, height = 0.5) +
+  draw_label("Palmer Penguins Intersection Set", y = 0.995, x = 0.5,  hjust = 0.5, vjust = 1, size = 25) +
+  draw_label("Data: Palmer Penguins • Visualisation: Ifeoma Egbogah", y = 0.03, x = 0.86, size = 9, colour = "grey65", fontface = "italic") +
+  geom_richtext(aes(x = 0.145, y = 0.43, label = "The penguin scene in the Palmer Archipelago is<br> like a penguin Olympics! <span style= 'color:cyan4;'>Gentoo</span> penguins on Biscoe<br> Island are the biggest and heaviest, owning the top<br> spot. <span style='color:purple;'>Chinstraps</span> are chilling exclusively on Dream<br> Island, while <span style='color:darkorange;'>Adélies</span> are the travel bugs, popping up<br> on all three islands in smaller numbers. <span style= 'color:cyan4;'>Gentoo</span> takes<br> the weight gold, followed by <span style='color:purple;'>Chinstraps</span> and the<br> lighter <span style='color:darkorange;'>Adélies</span>. Fun twist: even <span style='color:darkorange;'>Adélies</span> show weight<br> differences depending on the island, showing that<br> environment is a big influence!"), size = 3.5, fontface = "italic", fill = NA, label.color = NA)
+
+
+ggsave(here::here("2025", "Palmer Penguins", "palmer_penguins.pdf"), width = 12, height = 8, units = "in", device = cairo_pdf)
+
+pdftools::pdf_convert(here::here("2025", "Palmer Penguins", "palmer_penguins.pdf"), format = "png", dpi = 500)
+
+
+```
+
