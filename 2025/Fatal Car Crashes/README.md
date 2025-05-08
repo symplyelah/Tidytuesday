@@ -1,0 +1,2 @@
+### [Week 2025/16](https://github.com/symplyelah/Tidytuesday/blob/master/2025/Fatal%20Car%20Crashes/Fatal%20car%20crashes.Rmd) ⚱️ Fatal Car Crashes on 4/20 [The Annual Cannabis Holiday and Fatal Traffic Crashes](https://github.com/rfordatascience/tidytuesday/blob/main/data/2025/2025-04-22/readme.md)
+![./2025/Fatal%20Car%20Crashes/fatal_1.png](https://github.com/symplyelah/Tidytuesday/blob/master/2025/Fatal%20Car%20Crashes/fatal_1.png)
