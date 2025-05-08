@@ -1,0 +1,82 @@
+---
+title: "Fatal Car Crashes on 4/20"
+author: "Ifeoma Egbogah"
+output: html_document
+date: "2025-04-28"
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+
+library(tidyverse)
+library(wesanderson)
+library(ggtext)
+
+theme_set(theme_light())
+
+daily_accidents <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2025/2025-04-22/daily_accidents.csv')
+
+daily_accidents_420 <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2025/2025-04-22/daily_accidents_420.csv')
+
+
+pal <- wes_palette("AsteroidCity3", 25, type =  "continuous")
+```
+
+
+
+```{r}
+
+monthly_accidents <- daily_accidents %>% 
+  mutate(date = as.Date(date),
+         year = year(date),
+         month = month(date, label = TRUE)) %>% 
+  group_by(year, month) %>% 
+  summarise(monthly_fatalities = sum(fatalities_count),
+            mean_fatalities = mean(fatalities_count)) %>% 
+  ungroup() %>% 
+  mutate(change =  (monthly_fatalities - lag(monthly_fatalities)) / lag(monthly_fatalities))
+
+
+monthly_accidents %>% 
+  ggplot(aes(month, change/10, group = year)) +
+  geom_area(aes(colour = year, fill = year)) +
+  scale_fill_gradientn(colors = pal) +
+  scale_colour_gradientn(colours = pal, guide = "none") +
+  scale_y_continuous(labels = scales::percent_format()) +
+  theme_minimal() +
+  labs(x = "Month",
+       y = "% Change",
+       fill = "Year",
+       title = "When Crashes Spike: A 24-Year Look at Fatal Car Accidents in America",
+       subtitle = "Fatal car crashes in the USA show a strong seasonal pattern from 1992 to 2016. Peaks in fatal crash percentage changes are observed in <b>March</b> (Spring Break travel), <b>May</b> (Memorial Day), <b>July</b> (Independence Day), and <b>October</b> (Halloween), while sharp declines occur in <b>January</b>–<b>February</b> (post-holiday lull), <b>September</b> (end of summer and school reopening), and <b>November</b> (before winter).
+                           
+                          \nOver the two decades (1992–2016), while the <b>seasonal pattern remained consistent</b>, the <b>magnitude</b> of monthly changes <b>gradually decreased</b>, suggesting <b>improvements in road safety, vehicle technology, enforcement of traffic laws, and public awareness campaigns.</b> However, key holiday and travel periods still show notable spikes each year, highlighting persistent vulnerabilities linked to human behavior during specific months.
+       
+       \n<b>Targeted safety interventions</b> (especially before high-risk months) and continued <b>improvements in vehicle safety</b> and <b>law enforcement</b> are crucial to further reduce fatalities.",
+caption = "Data: Fatal Car Crashes on 4/20 • Visualization: Ifeoma Egbogah") +
+  theme_minimal() +
+  theme(legend.title.position = "top",
+        legend.title = element_text(face = "bold", size = 15),
+        legend.text = element_text(size = 12),
+        legend.key.height = unit(1.1, "cm"),
+        panel.background = element_rect(fill = "grey95"),
+        axis.title = element_text(size = 15),
+        axis.text = element_text(size = 15),
+        plot.background = element_rect(fill = "grey95"),
+        plot.subtitle = element_textbox_simple(size = 15, vjust = 0.5, hjust = 0.5, face = "italic",  margin = margin(0, 0, 5, 0, unit = "mm")),
+        plot.title = element_text(size = 28, vjust = 0.5, hjust = 0.5, face = "bold", margin = margin(0, 0, 5, 0, unit = "mm")))
+  
+
+
+ggsave(here::here("2025", "Fatal Car Crashes", "fatal.pdf"),  width = 20, height = 9, units = "in", device = cairo_pdf)
+
+pdftools::pdf_convert(here::here("2025", "Fatal Car Crashes", "fatal.pdf"), format = "png", dpi = 500)
+
+```
+

@@ -1,0 +1,279 @@
+---
+title: "Untitled"
+output: html_document
+date: "2025-05-06"
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+
+```{r}
+
+library(tidyverse)
+library(tidytext)
+library(ggtext)
+library(ggraph)
+library(igraph)
+
+theme_set(theme_light())
+
+user2025 <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2025/2025-04-29/user2025.csv')
+
+```
+
+
+```{r}
+
+
+popular_sessions <- c("Lightning", "Poster", "Tutorial", "Virtual", "Virtual Lightning", "Other")
+
+
+top_session <- 
+  user2025 %>% 
+  mutate(session = fct_lump_n(session, 5, other_level = "Other")) %>% 
+  count(session, sort =TRUE) 
+
+
+user_2025b <- user2025 %>% 
+  mutate(session = case_when(session == "Lightning" ~ "Lightning",
+                             session == "Poster" ~ "Poster",
+                             session == "Tutorial" ~ "Tutorial",
+                             session == "Virtual" ~ "Virtual",
+                             session == "Virtual Lightning" ~ "Virtual Lightning",
+                             .default = "Other"))
+
+
+custom_stop_words <- stop_words %>% #to keep r
+  filter(word != "r")
+
+number_of_words <- 250
+
+user_edit <- 
+  user_2025b %>% 
+  filter(session %in% top_session$session) %>% 
+  select(session, keywords) %>%   
+  unnest_tokens(word, keywords) %>%
+  anti_join(custom_stop_words) %>% 
+  mutate(word = case_when(word == "workflows" ~ "workflow",
+                          word == "dashboards" ~ "dashboard",
+                          word == "apis" ~ "api",
+                          word == "bioinformatics" ~ "bioinformatic",
+                          word == "Behavioral" ~ "Behavior",
+                          word %in% c("clustered", "clustering") ~ "cluster",
+                          word == "communications" ~ "communiocation",
+                          word == "educational" ~ "education",
+                          word == "extensions" ~ "extension",
+                          word == "financial" ~ "finance",
+                          word == "llms" ~ "llm",
+                          word == "sciences" ~ "science",
+                          word == "visualization" ~ "visualisation",
+                          .default = word),
+    word = str_to_title(word))
+
+top_words <- user_edit %>% 
+  group_by(word) %>% 
+  summarise(total_words = n()) %>%
+  arrange(desc(total_words)) %>% 
+  head(number_of_words) 
+
+
+session_per_word <- 
+  user_edit %>%  
+  filter(word %in% top_words$word,
+         session %in% popular_sessions) %>% 
+  group_by(session, word) %>% 
+  summarise(number_of_words = n() #same as code
+            ) %>%
+  group_by(word) %>% 
+  summarise(session = session,
+            number_of_words = number_of_words,
+    main = row_number() == 1) %>% 
+  ungroup() 
+
+
+top_session_per_word <- session_per_word %>% 
+  left_join(top_words, by = join_by(word)) 
+
+
+(top_session <- top_session_per_word %>% 
+  pull(session) %>% 
+  unique() %>% 
+  sort)
+
+
+top_session_colours <- c( 
+  "grey65",
+  "#511841",
+  "#7983d8",
+  "#ed5e64",
+  "#851e2f",
+  '#efb306')
+
+
+
+#top_session_colours <- c(
+ # '#efb306',
+#  '#e8351e',
+ # '#cd023d',
+  #'#852f88',
+  #'#4e54ac',
+  #'#17a769')
+
+names(top_session_colours) <- c("Lightning" ,
+                                "Poster",
+                                "Tutorial",
+                                "Virtual",
+                                "Virtual Lightning",
+                                "Other")
+
+  
+edges1b <- top_session_per_word %>%
+  transmute(from = session, to = word, total_words = number_of_words, main)
+
+
+edges2b <- top_session_per_word %>%
+  count(session, wt = number_of_words, name = 'total_words') %>% 
+  transmute(
+    from = '',
+    to = session,
+    total_words,
+    main = TRUE
+  )
+  
+  
+edges_b <- bind_rows(edges1b, edges2b)
+
+ 
+vertices1b <-  top_session_per_word %>%
+  filter(main) %>% 
+  transmute(
+    node = word, session, total_words, level = 1
+  )
+
+
+vertices2b <- edges2b %>%
+  transmute(
+    node = to, session = to, total_words, level = 2
+  )
+
+vertices3b <- tibble(
+  node = '', session = NA, total_words = 0, level = 3
+)
+
+
+vertices_b <- bind_rows(vertices1b, vertices2b, vertices3b) %>%
+  mutate(
+    radius = total_words, # scaling circles
+    session = factor(session, names(top_session_colours))
+  ) %>%
+  arrange(level, session, node) 
+
+
+
+graph_b <- graph_from_data_frame(edges_b, vertices = vertices_b)
+
+layout_b <- create_layout(graph_b, layout = 'circle')
+
+
+outer_circle_b <- layout_b %>%
+  filter(level == 1) %>%
+  mutate(session = factor(session, names(top_session_colours))) %>%
+  arrange(session, desc(name)) %>%
+  mutate(
+    x = cos((row_number() - 1) / number_of_words * 2 * pi),
+    y = sin((row_number() - 1) / number_of_words * 2 * pi)
+  )
+
+# positioning circle centers manually by specifying polar coords
+angles_b <- c(25, 70, 120, 155, 170, 257, 0)
+radii_b  <- c(0.45, 0.3, 0.8, 0.3, 0.85, 0.2, 0)
+
+centers_b <- tibble(
+  x = radii_b * cos(angles_b / 180 * pi),
+  y = radii_b * sin(angles_b / 180 * pi)
+)
+
+
+inner_circle_b <- bind_cols(centers_b, select(filter(layout_b, level != 1), -x, -y))
+
+
+layout_b[] <- bind_rows(outer_circle_b, inner_circle_b) %>%
+  arrange(.ggraph.index)
+
+
+ggraph(layout_b) +
+  geom_edge_diagonal(
+    aes(edge_color = node1.session, edge_alpha = as.factor(main)),
+    edge_width = 0.3, show.legend = FALSE
+  ) +
+  geom_node_point(
+    aes(size = radius, color = session),
+    alpha = 0.6, show.legend = FALSE
+  ) +
+  geom_node_text(
+    aes(
+      x = 1.0175 * x,
+      y = 1.0175 * y,
+      label = name,
+      angle = -((-node_angle(x, y) + 90) %% 180) + 90,
+      filter = !(name %in% top_session)
+    ),
+    size = 4, hjust = 'outward', family = 'Oswald'
+  )  +
+  geom_node_text(
+    aes(
+      x = x,
+      y = y + 0.02,
+      label = str_wrap(name, width = 5),
+      filter = name %in% top_session
+    ),
+    size = 4, hjust = 0.5, family = 'Oswald'
+  )  +
+  geom_node_text(
+    aes(
+      x = x,
+      y = y - 0.03,
+      label = ifelse(
+        total_words > 10,
+        format(total_words, big.mark = ','),
+        total_words),
+      filter = name %in% top_session
+    ),
+    size = 3, hjust = 0.5, family = 'Oswald'
+  ) +
+  scale_edge_color_manual(values = top_session_colours) +
+  scale_color_manual(values = top_session_colours) +
+  scale_size_area(max_size = 45) +
+  scale_edge_alpha_manual(values = c(0.15, 1)) +
+  coord_fixed(clip = "off", ratio = 3.5/5) +
+  labs(
+    title = 'Mapping the Intersection of Keywords and Session Formats at the useR 2025 Program',
+    subtitle = "This circular network plot visualizes the relationship between presentation formats and keywords from a conference. The largest category, <b><span style='color:#efb306;'>“Other”</span></b>, suggests a wide range of topics beyond standard formats. <b><span style='color:#ed5e64;'>“Virtual”</span></b> follows, reflecting the growing shift to online formats. <b><span style='color:#511841;'>“Poster”</span></b>, <b><span style='color:grey65;'>“Lightning”</span></b>, and <b><span style='color:#7983d8;'>“Tutorial”</span></b> sessions each highlight different focuses—technical depth, brevity, and education respectively. Common keywords like \"R\", “Data,” “Shiny,” and “Visualization” appear across multiple formats, highlighting central themes.",
+    caption =  "Data: useR! 2025 Program • Visualization: Ifeoma Egbogah") +
+  
+  theme_void() +
+  theme(
+    text = element_text(family = 'Oswald'),
+    legend.position = c(0.645, 0.51),
+    plot.title = element_text(face = 'bold', hjust = 0.5, size = 28, margin = margin(t = 3, b = 2, unit = "mm")),
+    plot.subtitle = element_textbox(hjust = 0.5, size = 13, width = 1, height = 0.15,  margin = margin(t = 1, b = 0.8, unit = "mm")),
+    plot.caption = element_text(color = 'grey', size = 12, hjust = 1.1)) 
+
+```
+
+
+
+```{r}
+
+ggsave(here::here("2025", "useR 2025 program", "user.pdf"), width = 17, height = 12, units = "in", device = cairo_pdf)
+
+pdftools::pdf_convert(here::here("2025", "useR 2025 program", "user.pdf"), dpi = 400, format = "png")
+
+```
+
