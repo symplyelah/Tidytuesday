@@ -1,0 +1,2 @@
+### [Week 2025/18](https://github.com/symplyelah/Tidytuesday/blob/master/2025/nsf_terminations/nsf_terminations.Rmd) ⚱️ NSF Terminations [National Science Foundation Grant Terminations under the Trump Administration](https://github.com/rfordatascience/tidytuesday/blob/main/data/2025/2025-05-06/readme.md)
+![./2025/nsf_terminations/nsf.png](https://github.com/symplyelah/Tidytuesday/blob/master/2025/nsf_terminations/nsf.png)
