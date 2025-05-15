@@ -1,0 +1,125 @@
+---
+title: "NSF Grant Funding Termination by Trump Administration"
+author: "Ifeoma Egbogah"
+output: html_document
+date: "2025-05-12"
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+
+library(tidyverse)
+library(ggtext)
+library(ggsci)
+library(ggmosaic)
+library(systemfonts)
+library(showtext)
+
+theme_set(theme_light())
+
+nsf <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2025/2025-05-06/nsf_terminations.csv') %>%   mutate(org_city = str_to_title(org_city))
+
+font_add(family = "Charlemagne Std", regular = "C:/Users/dell/AppData/Local/Microsoft/Windows/Fonts/CharlemagneStd-Bold.otf", bold = "C:/Users/dell/AppData/Local/Microsoft/Windows/Fonts/CharlemagneStd-Bold.otf")
+
+showtext_auto()
+
+
+```
+
+
+```{r}
+
+
+nsf2<- nsf %>% 
+  drop_na()
+
+
+
+direct_total <- nsf2 %>% 
+  group_by(directorate_abbrev) %>% 
+  summarise(directorate_total = sum(usaspending_obligated),
+            directorate_percent = directorate_total/ sum(nsf2$usaspending_obligated, na.rm = TRUE), .groups = "drop") 
+
+
+
+award_tot <- nsf2 %>% 
+  group_by(directorate_abbrev, award_type) %>% 
+  summarise(award_type_total = sum(usaspending_obligated), .groups = "drop") %>% 
+   pivot_wider(names_from = award_type, values_from = award_type_total, values_fill = 0) %>% 
+   left_join(direct_total) %>% 
+   mutate(continue_grant = `Continuing Grant`/directorate_total,
+          fellowship_award = `Fellowship Award`/directorate_total,
+          standard_grant = `Standard Grant`/directorate_total,
+          cooperative_agreement = `Cooperative Agreement`/directorate_total)
+
+
+
+long <- award_tot %>% 
+  select(-`Continuing Grant`, -`Fellowship Award`, -`Standard Grant`, -`Cooperative Agreement`) %>% 
+   pivot_longer(cols = c(continue_grant, fellowship_award, standard_grant, cooperative_agreement), names_to = "award", values_to = "grant_per") %>% 
+  mutate(weight = (directorate_percent * grant_per),
+         grant_per = round(grant_per, 2) * 100,
+         award = str_to_title(str_replace_all(award, "_", " ")),
+         directorate_abbrev = fct_reorder(directorate_abbrev, -directorate_total)) 
+
+
+
+q <- long %>% 
+  ggplot() +
+  geom_mosaic(aes(x = product(award, directorate_abbrev), fill = award, weight = weight), offset = 0.004) 
+  
+q + geom_text(data = ggplot_build(q)$data[[1]] %>% 
+              group_by(x__directorate_abbrev) %>% 
+              mutate(pct = .wt/sum(.wt)*100) %>% 
+                filter(pct > 0),
+             aes(x = (xmin+xmax)/2, y = (ymin+ymax)/2, label = paste0(round(pct), "%")), fontface = "bold", size = 4, colour = "white") +
+  geom_text(data = ggplot_build(q)$data[[1]] %>%
+              group_by(x__directorate_abbrev) %>%
+              summarise(ymax = max(ymax)) %>%
+              mutate(label = c("$321M", "$77M", "$61M", "$44M", "$35M", "$33M", "$27M", "$6M", "$4M"),
+                     x = c(0.25, 0.56, 0.68, 0.76, 0.83, 0.89, 0.94, 0.974, 0.995)),
+             aes(x = x , y = ymax + 0.02, label = label), fontface = "bold", size = 3.3, nudge_x = 0.01, colour = "white") +
+  
+  scale_fill_aaas() +
+  labs(title = "Unprecedented Terminations:\nNSF Grant Funding Cut by Trump Administration in 2025",
+       subtitle = "This Marimekko plot illustrates the distribution of NSF grants—by award type and directorate—that were committed but later terminated in April 2025 under the Trump administration.  The width of each bar represents the total funding commitment made by NSF, with values ranging from $4M to $321M across directorates. Many of these projects had already commenced as early as 2021. <b><span style='color:#C77CFF'>Standard Grants</span></b> dominate across all directorates, accounting for the bulk of terminations. <b><span style='color:blue'>Continue Grants</span></b> saw significant cancellations in EDU and GEO. <b><span style='color:red'>Cooperative Agreements</span></b> were particularly targeted in TIP and CISE. <b><span style='color:green'>Fellowship Awards</span></b>, though small in dollar terms, were eliminated entirely in several directorates.",
+       caption = "Data: Grant Watch • Visualization: Ifeoma Egbogah",
+       y = " ",
+       x = "Directorate",
+       fill = "Award Type") +
+  theme_minimal() +
+  theme(axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        axis.text.x = element_text(colour = "white", angle = 30, family = "Charlemagne Std", size = 12),
+        axis.title = element_text(family = "Charlemagne Std", size = 12, colour = "white", face = "bold"),
+        legend.text = element_text(family = "Charlemagne Std", colour = "white", size = 10),
+        legend.title = element_text(family = "Charlemagne Std", colour = "white", face = "bold", size = 12),
+        plot.background = element_rect(fill = "black"),
+        panel.background = element_rect(fill = "black"),
+        panel.grid = element_blank(),
+        plot.subtitle = element_textbox_simple(margin = margin(b = 5, unit = "mm"), colour = "white", face = "italic", size = 13),
+        plot.title = element_text(family = "Charlemagne Std", colour = "white", face = "bold", ,hjust = 0.5, size = 25, margin = margin(b = 5, unit = "mm")),
+        plot.caption = element_text(face = "bold", size = 10, family = "Charlemagne Std", colour = "white", hjust = 1.15))
+
+
+
+
+```
+
+
+```{r}
+ggsave(here::here("2025", "nsf", "nsf.pdf"),  width = 20, height = 9, units = "in", device = cairo_pdf)
+
+pdftools::pdf_convert(here::here("2025", "nsf", "nsf.pdf"), format = "png", dpi = 500)
+
+
+```
+
+
+
