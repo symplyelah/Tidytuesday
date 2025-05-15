@@ -116,7 +116,7 @@ q + geom_text(data = ggplot_build(q)$data[[1]] %>%
 ```{r}
 ggsave(here::here("2025", "nsf", "nsf.pdf"),  width = 20, height = 9, units = "in", device = cairo_pdf)
 
-pdftools::pdf_convert(here::here("2025", "nsf", "nsf.pdf"), format = "png", dpi = 500)
+pdftools::pdf_convert(here::here("2025", "nsf", "nsf.pdf"), format = "png", dpi = 320)
 
 
 ```
